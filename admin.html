@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>WAY_VR — админ</title>
+<meta name="theme-color" content="#0d0b14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="WAY_VR админ">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🛠%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@500;700&display=swap">
+<style>
+  :root {
+    --bg: #0d0b14; --card: #17141f; --field: #100e17; --line: rgba(255,255,255,.08); --text: #f3f0fa; --muted: #9a93ab;
+    --accent: #8b5cf6; --accent2: #22d3ee; --ok: #22c55e; --err: #f87171; --warn: #fbbf24;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 'Manrope', -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+  body::before { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background: radial-gradient(800px 480px at 0% -10%, rgba(139,92,246,.20), transparent 60%),
+                radial-gradient(700px 420px at 100% 0%, rgba(34,211,238,.10), transparent 60%); }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 16px 16px 48px; }
+  h1, .brand { font-family: 'Unbounded', 'Manrope', sans-serif; letter-spacing: -.3px; }
+  .hide { display: none !important; }
+  button { font: inherit; }
+
+  .topbar { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 10px; padding: 10px 16px;
+    background: rgba(13,11,20,.75); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-bottom: 1px solid var(--line); }
+  .brand { font-size: 16px; font-weight: 700; background: linear-gradient(90deg, #c4b5fd, var(--accent2));
+    -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .brand small { -webkit-text-fill-color: var(--muted); font-family: 'Manrope', sans-serif; font-weight: 600; font-size: 13px; margin-left: 4px; }
+  .sp { flex: 1; }
+  .ic { height: 40px; min-width: 40px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--line); background: rgba(255,255,255,.04);
+    color: var(--text); cursor: pointer; font-weight: 700; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+
+  /* Вход */
+  .login { max-width: 360px; margin: 12vh auto 0; text-align: center; }
+  .login h1 { font-size: 26px; margin: 0 0 6px; background: linear-gradient(90deg, #a78bfa, var(--accent2));
+    -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .login p { color: var(--muted); margin: 0 0 18px; }
+  input[type=password], input[type=text] { width: 100%; height: 50px; padding: 0 14px; border-radius: 14px; border: 1px solid var(--line);
+    background: var(--field); color: var(--text); font: inherit; font-size: 16px; }
+  input:focus { outline: 2px solid var(--accent); border-color: transparent; }
+  .check { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 12px 0 0; color: var(--muted); font-size: 14px; }
+  .btn { width: 100%; height: 50px; margin-top: 14px; border: 0; border-radius: 14px; color: #fff; font-weight: 800; font-size: 16px; cursor: pointer;
+    background: linear-gradient(90deg, var(--accent), #6d28d9); box-shadow: 0 10px 30px rgba(109,40,217,.35); }
+  .btn:disabled { opacity: .5; }
+  .msg { margin-top: 12px; padding: 11px 14px; border-radius: 12px; font-size: 14px; background: rgba(248,113,113,.12); color: var(--err); }
+
+  /* Список */
+  .tabs { display: flex; gap: 4px; padding: 4px; margin: 6px 0 14px; border-radius: 14px; background: rgba(255,255,255,.04); border: 1px solid var(--line); }
+  .tabs button { flex: 1; height: 40px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); font-weight: 800; font-size: 14px; cursor: pointer; }
+  .tabs button.on { background: linear-gradient(90deg, var(--accent), #6d28d9); color: #fff; }
+  .tabs b { font-weight: 800; opacity: .8; margin-left: 4px; }
+  .empty { text-align: center; color: var(--muted); padding: 40px 10px; }
+  .card { border: 1px solid var(--line); border-radius: 18px; padding: 14px 14px 12px; margin-bottom: 10px;
+    background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.015)), var(--card); }
+  .row1 { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .dev { font-weight: 800; font-size: 16px; }
+  .chip { font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 99px; }
+  .chip.transfer { color: var(--warn); background: rgba(251,191,36,.12); }
+  .chip.cash { color: var(--ok); background: rgba(34,197,94,.12); }
+  .chip.confirmed { color: #c4b5fd; background: rgba(139,92,246,.18); }
+  .bid { margin-left: auto; color: var(--muted); font-size: 12px; }
+  .who { margin-top: 8px; font-weight: 700; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; margin-top: 8px; font-size: 14px; }
+  .grid2 span { color: var(--muted); display: block; font-size: 12px; }
+  .links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .lnk { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 10px; text-decoration: none;
+    font-weight: 700; font-size: 13px; color: var(--text); background: rgba(255,255,255,.05); border: 1px solid var(--line); }
+  .lnk.wa { color: #25d366; border-color: rgba(37,211,102,.35); }
+  .acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .act { height: 44px; border-radius: 12px; border: 0; font-weight: 800; font-size: 15px; cursor: pointer; }
+  .act.ok { color: #fff; background: linear-gradient(90deg, #16a34a, #0d9488); }
+  .act.no { color: var(--err); background: rgba(248,113,113,.10); border: 1px solid rgba(248,113,113,.35); }
+  .act:disabled { opacity: .5; }
+  .acts.one { grid-template-columns: 1fr; }
+
+  .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 50; padding: 12px 18px; border-radius: 14px;
+    background: #1f1b2b; border: 1px solid var(--line); box-shadow: 0 10px 30px rgba(0,0,0,.5); font-weight: 700; font-size: 14px; max-width: 92vw; white-space: nowrap; text-align: center; }
+  .toast.err { color: var(--err); }
+  .loading { text-align: center; color: var(--muted); padding: 30px 0; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="brand">WAY_VR<small>админ</small></span>
+  <span class="sp"></span>
+  <button class="ic hide" id="refresh" title="Обновить">↻</button>
+  <button class="ic hide" id="logout">Выйти</button>
+</div>
+
+<div class="wrap">
+  <!-- Вход -->
+  <form class="login" id="login">
+    <h1>Вход для админа</h1>
+    <p>Пароль — в таблице, лист «Настройки», строка «Сайт: пароль админа».</p>
+    <input type="password" id="pass" autocomplete="current-password" placeholder="Пароль" required>
+    <label class="check"><input type="checkbox" id="remember" checked> Запомнить на этом телефоне</label>
+    <button class="btn" id="enter" type="submit">Войти</button>
+    <div class="msg hide" id="loginErr"></div>
+  </form>
+
+  <!-- Брони -->
+  <div id="app" class="hide">
+    <div class="tabs">
+      <button type="button" data-tab="wait" class="on">Ждут решения<b id="nWait"></b></button>
+      <button type="button" data-tab="ok">Подтверждены<b id="nOk"></b></button>
+    </div>
+    <div id="list"><div class="loading">Загружаем брони…</div></div>
+  </div>
+</div>
+<div class="toast hide" id="toast"></div>
+
+<script>
+  // Тот же адрес Google-скрипта, что и в index.html
+  const API_URL = 'https://script.google.com/macros/s/AKfycbw4r7GVTggk5RnNq6HSJuuZiw04T5Zs1bRgoVeaata2J4EkKLH_s8mZ7mTsqgjMH5Rb/exec';
+  const KEY = 'wayvr-admin';
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  let pass = '', tab = 'wait', items = [], busy = false;
+
+  const store = {
+    get() { try { return localStorage.getItem(KEY) || ''; } catch (e) { return ''; } },
+    set(v) { try { v ? localStorage.setItem(KEY, v) : localStorage.removeItem(KEY); } catch (e) {} },
+  };
+
+  async function api(cmd, id) {
+    const r = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'admin', arg: { key: pass, cmd: cmd, id: id } }) });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || 'Ошибка сервера');
+    return j.data;
+  }
+
+  function toast(text, isErr) {
+    const t = $('toast'); t.textContent = text; t.classList.toggle('err', !!isErr); t.classList.remove('hide');
+    clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.add('hide'), 3000);
+  }
+
+  function showApp(on) {
+    $('login').classList.toggle('hide', on); $('app').classList.toggle('hide', !on);
+    $('refresh').classList.toggle('hide', !on); $('logout').classList.toggle('hide', !on);
+  }
+
+  async function load(cmd, id) {
+    if (busy) return;
+    busy = true;
+    try {
+      const d = await api(cmd || 'list', id);
+      items = d.bookings || [];
+      render();
+      return true;
+    } catch (e) {
+      if (/пароль|попыток/i.test(e.message)) { store.set(''); showApp(false); $('loginErr').textContent = e.message; $('loginErr').classList.remove('hide'); }
+      else toast(e.message, true);
+      return false;
+    } finally { busy = false; }
+  }
+
+  const waiting = b => b.status !== 'Подтверждена';
+  function render() {
+    const w = items.filter(waiting), ok = items.filter(b => !waiting(b));
+    $('nWait').textContent = w.length ? w.length : ''; $('nOk').textContent = ok.length ? ok.length : '';
+    document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
+    const list = tab === 'wait' ? w : ok;
+    if (!list.length) { $('list').innerHTML = `<div class="empty">${tab === 'wait' ? 'Новых броней нет 👌' : 'Подтверждённых броней нет'}</div>`; return; }
+    $('list').innerHTML = list.map(b => {
+      const cash = /налич/i.test(b.pay) || b.status.indexOf('Наличные') === 0;
+      const chip = b.status === 'Подтверждена' ? '<span class="chip confirmed">Подтверждена</span>'
+        : cash ? '<span class="chip cash">💵 Наличные</span>' : '<span class="chip transfer">💳 Проверить перевод</span>';
+      const digits = String(b.phone).replace(/\D/g, '').replace(/^8(?=\d{10}$)/, '7');
+      const docs = (b.passports || []).map(p => `<a class="lnk" href="${esc(p.url)}" target="_blank" rel="noopener">📄 ${esc(p.t || 'Паспорт')}</a>`).join('');
+      return `<div class="card">
+        <div class="row1"><span class="dev">${esc(b.deviceName)}</span>${chip}<span class="bid">${esc(b.id)}</span></div>
+        <div class="who">${esc(b.name)}</div>
+        <div class="grid2">
+          <div><span>Забирает</span>${esc(b.start)}</div>
+          <div><span>Вернёт до</span>${esc(b.end)}</div>
+        </div>
+        <div class="links">
+          <a class="lnk" href="tel:+${esc(digits)}">📞 ${esc(b.phone)}</a>
+          <a class="lnk wa" href="https://wa.me/${esc(digits)}" target="_blank" rel="noopener">WhatsApp</a>
+          ${docs}
+        </div>
+        <div class="acts ${b.status === 'Подтверждена' ? 'one' : ''}">
+          ${b.status === 'Подтверждена' ? '' : `<button class="act ok" data-cmd="confirm" data-id="${esc(b.id)}">✅ Подтвердить</button>`}
+          <button class="act no" data-cmd="cancel" data-id="${esc(b.id)}">❌ Отменить</button>
+        </div>
+      </div>`;
+    }).join('');
+    $('list').querySelectorAll('.act').forEach(btn => btn.onclick = async () => {
+      const id = btn.dataset.id, cmd = btn.dataset.cmd;
+      const b = items.find(x => x.id === id);
+      if (cmd === 'cancel' && !confirm(`Отменить бронь ${id}?\n${b.deviceName} — ${b.name}\n\nУстройство снова станет «Свободен».`)) return;
+      $('list').querySelectorAll('.act').forEach(x => x.disabled = true);
+      btn.textContent = cmd === 'cancel' ? 'Отменяем…' : 'Подтверждаем…';
+      if (await load(cmd, id)) toast(cmd === 'cancel' ? 'Бронь отменена, устройство свободно' : 'Бронь подтверждена');
+      else render();
+    });
+  }
+
+  document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => { tab = b.dataset.tab; render(); });
+  $('refresh').onclick = async () => { $('refresh').disabled = true; if (await load()) toast('Обновлено'); $('refresh').disabled = false; };
+  $('logout').onclick = () => { store.set(''); pass = ''; items = []; $('pass').value = ''; showApp(false); };
+  $('login').onsubmit = async e => {
+    e.preventDefault();
+    pass = $('pass').value.trim();
+    if (!pass) return;
+    $('enter').disabled = true; $('enter').textContent = 'Проверяем…'; $('loginErr').classList.add('hide');
+    showApp(true); $('list').innerHTML = '<div class="loading">Загружаем брони…</div>';
+    if (await load()) store.set($('remember').checked ? pass : '');
+    $('enter').disabled = false; $('enter').textContent = 'Войти';
+  };
+
+  // Уже входили на этом телефоне — сразу открываем список
+  pass = store.get();
+  if (pass) { showApp(true); load(); }
+</script>
+</body>
+</html>
