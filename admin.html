@@ -156,8 +156,18 @@
       render();
       return true;
     } catch (e) {
-      if (/пароль|попыток/i.test(e.message)) { store.set(''); showApp(false); $('loginErr').textContent = e.message; $('loginErr').classList.remove('hide'); }
-      else toast(e.message, true);
+      const msg = /Неизвестный запрос/.test(e.message)
+        ? 'Google-скрипт ещё старый. В «Управление развертываниями» выберите развертывание с этим адресом и сделайте «Новая версия».'
+        : e.message;
+      if (/пароль|попыток/i.test(e.message)) {
+        // забываем пароль, только если он неверный (при паузе после попыток — оставляем)
+        if (/Неверный пароль/.test(e.message)) store.set('');
+        showApp(false); $('loginErr').textContent = msg; $('loginErr').classList.remove('hide');
+      }
+      else if (!items.length) {
+        $('list').innerHTML = `<div class="msg">${esc(msg)}</div><button class="btn" id="retry">Повторить</button>`;
+        $('retry').onclick = () => { $('list').innerHTML = '<div class="loading">Загружаем брони…</div>'; load(); };
+      } else toast(msg, true);
       return false;
     } finally { busy = false; }
   }
@@ -212,8 +222,11 @@
     pass = $('pass').value.trim();
     if (!pass) return;
     $('enter').disabled = true; $('enter').textContent = 'Проверяем…'; $('loginErr').classList.add('hide');
+    // Запоминаем сразу; если пароль окажется неверным — load() его сотрёт
+    store.set($('remember').checked ? pass : '');
+    items = [];
     showApp(true); $('list').innerHTML = '<div class="loading">Загружаем брони…</div>';
-    if (await load()) store.set($('remember').checked ? pass : '');
+    await load();
     $('enter').disabled = false; $('enter').textContent = 'Войти';
   };
 
