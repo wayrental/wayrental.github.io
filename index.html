@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WAY_VR — прокат VR</title>
+<meta name="description" content="Прокат VR-шлемов Meta Quest 3 и умных очков Ray-Ban Meta. Выберите свободное устройство и забронируйте онлайн.">
+<meta property="og:title" content="WAY_VR — прокат VR">
+<meta property="og:description" content="Прокат VR-шлемов Meta Quest 3 и очков Ray-Ban Meta. Бронь онлайн за пару минут.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#0d0b14">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http:%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🥽%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@500;700&display=swap">
+<style>
+  :root {
+    --bg: #0d0b14; --card: #17141f; --field: #100e17; --line: #2a2536; --text: #f3f0fa; --muted: #9a93ab;
+    --accent: #8b5cf6; --accent2: #22d3ee; --ok: #22c55e; --err: #f87171;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.45 -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 20px 16px 48px; }
+
+  /* Шапка */
+  header { text-align: center; padding: 8px 0 4px; }
+  h1 { margin: 0; font-size: 30px; letter-spacing: -0.5px; }
+  h1 span { background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .lead { color: var(--muted); margin: 6px auto 0; max-width: 460px; font-size: 15px; }
+
+  /* Шаги 1-2-3: всегда три ровные колонки */
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 18px 0 6px; }
+  .step { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 8px;
+    text-align: center; font-size: 13px; color: var(--muted); }
+  .step i { display: flex; width: 26px; height: 26px; margin: 0 auto 6px; border-radius: 50%; font-style: normal;
+    align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: #fff;
+    background: linear-gradient(135deg, var(--accent), #6d28d9); }
+  .step b { display: block; color: var(--text); font-size: 14px; }
+
+  h2 { font-size: 19px; margin: 26px 0 12px; }
+
+  /* Тарифы: ровная сетка 4 / 2 колонки */
+  .tariffs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
+  .tariff { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px; text-align: center; }
+  .tariff span { display: block; font-size: 12px; color: var(--muted); }
+  .tariff b { font-size: 17px; color: var(--accent2); }
+
+  /* Шлемы */
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .item { position: relative; background: var(--card); border: 2px solid var(--line); border-radius: 16px; overflow: hidden;
+    cursor: pointer; transition: border-color .15s, transform .15s; text-align: left; color: inherit;
+    font: inherit; padding: 0; display: flex; flex-direction: column; }
+  .item:hover:not(:disabled) { transform: translateY(-2px); border-color: #4b3f66; }
+  .item.sel { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(139,92,246,.3); }
+  .item:disabled { cursor: not-allowed; opacity: .45; }
+  .ph { position: relative; height: 150px; background: linear-gradient(135deg, #2b1f4a, #0f2d38);
+    display: flex; align-items: center; justify-content: center; font-size: 40px; }
+  .ph.has-img { background: #000; }
+  .ph img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .ph.has-img .emoji { display: none; }
+  .ph.has-img .badge { background: rgba(10,30,18,.85); backdrop-filter: blur(4px); }
+  .ph.has-img .badge.busy { background: rgba(40,10,10,.85); }
+  .badge { z-index: 1; }
+  .badge { position: absolute; top: 8px; right: 8px; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 99px; }
+  .badge.free { background: rgba(34,197,94,.18); color: var(--ok); }
+  .badge.busy { background: rgba(248,113,113,.18); color: var(--err); }
+  .item .body { padding: 10px 12px 12px; }
+  .name { font-weight: 700; font-size: 16px; }
+  .price { font-size: 14px; color: var(--muted); margin-top: 2px; }
+  .price b { color: var(--text); }
+  .item.sel .name::after { content: " ✓"; color: var(--accent); }
+
+  /* Разделы */
+  .cat + .cat { margin-top: 34px; }
+  .about { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .ab { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; }
+  .ab h3 { margin: 0 0 8px; font-size: 16px; }
+  .ab p { margin: 0; font-size: 14px; color: #d6d1e2; line-height: 1.5; }
+  .ab ul { margin: 0; padding: 0; list-style: none; }
+  .ab li { position: relative; padding-left: 18px; font-size: 14px; color: #d6d1e2; line-height: 1.5; }
+  .ab li + li { margin-top: 5px; }
+  .ab li::before { content: ''; position: absolute; left: 3px; top: .62em; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent2); }
+  @media (max-width: 720px) { .about { grid-template-columns: 1fr; } }
+  .cat-h { display: flex; align-items: center; gap: 10px; margin: 26px 0 12px; }
+  .cat-h h2 { margin: 0; }
+  .cat-h span { font-size: 12px; color: var(--muted); background: var(--card); border: 1px solid var(--line);
+    border-radius: 99px; padding: 3px 10px; white-space: nowrap; }
+
+  /* Описание выбранного устройства */
+  .info { display: grid; grid-template-columns: 220px 1fr; gap: 16px; margin-bottom: 18px; padding-bottom: 18px;
+    border-bottom: 1px solid var(--line); }
+  .info-ph { position: relative; border-radius: 14px; overflow: hidden; min-height: 160px;
+    background: linear-gradient(135deg, #2b1f4a, #0f2d38); display: flex; align-items: center; justify-content: center; font-size: 56px; }
+  .info-ph img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .info-t { margin: 0 0 6px; font-weight: 700; font-size: 18px; }
+  .info-d { color: #d6d1e2; font-size: 14px; line-height: 1.55; }
+  .tariffs.mini { margin: 12px 0 0; gap: 6px; }
+  .tariffs.mini .tariff { padding: 6px 4px; border-radius: 10px; }
+  .tariffs.mini .tariff b { font-size: 14px; }
+
+  /* Форма — блоки по шагам */
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 18px; }
+  .sec + .sec { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); }
+  .sec-t { font-weight: 700; font-size: 15px; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; }
+  .sec-t i { display: inline-flex; width: 22px; height: 22px; border-radius: 50%; font-style: normal; font-size: 12px;
+    align-items: center; justify-content: center; background: rgba(139,92,246,.2); color: #c4b5fd; }
+  .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  label { font-size: 13px; color: var(--muted); display: block; margin-bottom: 5px; }
+  input[type=text], input[type=tel], input[type=date], input[type=time], input[type=number] {
+    width: 100%; height: 48px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--line);
+    background: var(--field); color: var(--text); font: inherit; font-size: 16px; color-scheme: dark;
+    -webkit-appearance: none; appearance: none; min-width: 0; }
+  input:focus { outline: 2px solid var(--accent); border-color: transparent; }
+  .endAt { height: 48px; display: flex; align-items: center; padding: 0 12px; border-radius: 12px;
+    background: rgba(34,211,238,.08); color: var(--accent2); font-weight: 600; font-size: 15px; }
+
+  .upload { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+    min-height: 92px; padding: 14px; border: 2px dashed #3a3350; border-radius: 14px; cursor: pointer;
+    color: var(--accent2); font-size: 15px; text-align: center; background: var(--field); margin: 0; }
+  .upload:hover { border-color: var(--accent); }
+  .upload img { max-height: 150px; max-width: 100%; border-radius: 8px; }
+  /* Фото паспорта: одно поле, внутри два снимка */
+  .upload.done { border-style: solid; border-color: var(--ok); }
+  .shots { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+  .shot { position: relative; aspect-ratio: 4 / 3; border-radius: 10px; overflow: hidden; background: #1c1828;
+    border: 1px dashed #3a3350; display: flex; align-items: center; justify-content: center; }
+  .shot img { width: 100%; height: 100%; object-fit: cover; border-radius: 0; max-height: none; }
+  .shot .ph-t { font-size: 12px; color: var(--muted); padding: 0 6px; }
+  .shot b { position: absolute; left: 6px; bottom: 6px; font-size: 11px; font-weight: 700; padding: 2px 7px;
+    border-radius: 99px; background: rgba(0,0,0,.7); color: #fff; }
+  .shot .del { position: absolute; top: 5px; right: 5px; width: 26px; height: 26px; border-radius: 50%; border: 0;
+    background: rgba(0,0,0,.7); color: #fff; font-size: 14px; line-height: 26px; padding: 0; cursor: pointer; }
+  .small { font-size: 12px; color: var(--muted); margin: 8px 0 0; }
+
+  .total { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px;
+    border-radius: 14px; background: linear-gradient(90deg, rgba(139,92,246,.18), rgba(34,211,238,.10)); }
+  .total span { color: var(--muted); font-size: 14px; }
+  .total b { font-size: 26px; }
+
+  .pay-ways { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .pay-way { padding: 12px 8px; border-radius: 14px; border: 2px solid var(--line); background: var(--field);
+    color: var(--text); font: inherit; font-weight: 700; font-size: 15px; cursor: pointer; text-align: center; }
+  .pay-way small { display: block; font-weight: 400; font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .pay-way.on { border-color: var(--accent); background: rgba(139,92,246,.14); }
+  .cash-note { margin-top: 12px; padding: 14px; border-radius: 14px; background: rgba(34,197,94,.1);
+    border: 1px solid rgba(34,197,94,.35); font-size: 14px; color: #d6d1e2; }
+  .req { margin-top: 12px; background: var(--field); border: 1px solid var(--line); border-radius: 14px; padding: 4px 14px; }
+  .line { display: grid; grid-template-columns: 130px 1fr auto; gap: 4px 10px; align-items: center; padding: 11px 0; }
+  .line + .line { border-top: 1px solid var(--line); }
+  .line .k { color: var(--muted); font-size: 13px; }
+  .line .v { font-weight: 600; word-break: break-all; }
+  .copy { background: rgba(34,211,238,.1); border: 0; color: var(--accent2); border-radius: 8px;
+    padding: 7px 10px; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .bank { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; }
+  .bank .logo { width: 24px; height: 24px; flex: none; }
+  .bank span:not([class]) { color: var(--text); }
+  .sber { color: #21a038; }
+  .tbank { color: #ffdd2d; }
+  .receipt { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 12px; padding: 12px;
+    border-radius: 12px; border: 1px solid var(--line); color: var(--text); text-decoration: none; font-weight: 600; font-size: 15px; }
+  .receipt.wa { border-color: rgba(37,211,102,.4); color: #25d366; }
+  .receipt.tg { border-color: rgba(42,171,238,.4); color: #2aabee; }
+
+  .check { display: flex; gap: 12px; align-items: flex-start; margin: 14px 0 0; cursor: pointer; font-size: 14px; color: #d6d1e2; }
+  .check input { flex: none; width: 22px; height: 22px; margin: 0; accent-color: var(--accent); }
+  .btn { width: 100%; margin-top: 18px; height: 56px; border: 0; border-radius: 14px; font: inherit; font-weight: 700;
+    font-size: 17px; color: #fff; cursor: pointer; background: linear-gradient(90deg, var(--accent), #6d28d9); }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+  .msg { padding: 12px 14px; border-radius: 12px; margin-top: 12px; font-size: 15px; }
+  .msg.err { background: rgba(248,113,113,.12); color: var(--err); }
+
+  .done { text-align: center; padding: 32px 20px; }
+  .done .big { font-size: 56px; line-height: 1; }
+  .done h2 { margin: 12px 0 8px; }
+  .done .receipt { max-width: 320px; margin: 16px auto 0; }
+  .muted { color: var(--muted); }
+  .hide { display: none !important; }
+  .skeleton { color: var(--muted); padding: 30px 0; text-align: center; grid-column: 1 / -1; }
+
+  /* Игры */
+  #games { margin-top: 34px; scroll-margin-top: 72px; }
+  /* WhatsApp: кнопка в шапке и плавающая внизу экрана */
+  .wa-ico { width: 18px; height: 18px; flex: none; }
+  .wa-top { display: inline-flex; align-items: center; gap: 6px; margin: 10px 4px 0; padding: 7px 14px; border-radius: 99px;
+    font-size: 14px; color: #25d366; text-decoration: none; background: rgba(37,211,102,.1); border: 1px solid rgba(37,211,102,.35); }
+  .wa-float { position: fixed; right: 16px; bottom: 16px; z-index: 40; display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 16px 12px 13px; border-radius: 99px; background: #25d366; color: #fff; text-decoration: none;
+    font-weight: 700; font-size: 15px; box-shadow: 0 6px 20px rgba(0,0,0,.45); transition: opacity .2s, transform .2s; }
+  .wa-float .wa-ico { width: 24px; height: 24px; }
+  .wa-float.away { opacity: 0; transform: translateY(20px); pointer-events: none; }
+  .to-games { display: inline-block; margin-top: 10px; padding: 7px 14px; border-radius: 99px; font-size: 14px;
+    color: var(--accent2); text-decoration: none; background: rgba(34,211,238,.08); border: 1px solid rgba(34,211,238,.25); }
+  .games { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .game { background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; cursor: pointer;
+    padding: 0; text-align: left; color: inherit; font: inherit; display: flex; flex-direction: column;
+    transition: border-color .15s, transform .15s; }
+  .game:hover { transform: translateY(-2px); border-color: #4b3f66; }
+  .game .ph { height: auto; aspect-ratio: 16 / 9; }
+  .play { position: absolute; z-index: 1; width: 46px; height: 46px; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center; background: rgba(0,0,0,.55); backdrop-filter: blur(4px);
+    border: 2px solid rgba(255,255,255,.85); color: #fff; font-size: 17px; padding-left: 3px; }
+  .game:hover .play { background: var(--accent); border-color: var(--accent); }
+  .age { position: absolute; z-index: 1; top: 8px; left: 8px; font-size: 11px; font-weight: 700; padding: 3px 7px;
+    border-radius: 7px; background: rgba(0,0,0,.65); color: #fff; }
+  /* Значок «можно играть вместе» */
+  .coop { position: absolute; z-index: 1; top: 8px; left: 8px; display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 99px; color: #fff;
+    background: linear-gradient(135deg, #16a34a, #0d9488); box-shadow: 0 2px 8px rgba(0,0,0,.35); }
+  .coop-inline { position: static; margin: 6px 0 2px; font-size: 12px; }
+  .coop-hint { margin: -4px 0 12px; font-size: 13px; color: var(--muted); }
+  .coop-hint .coop { position: static; vertical-align: 1px; margin-right: 4px; }
+  .game .body { padding: 10px 12px 12px; }
+  .game .genre { font-size: 12px; color: var(--accent2); margin-top: 2px; }
+  .game .gd { font-size: 13px; color: var(--muted); margin-top: 6px; line-height: 1.45;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+  /* Окно с трейлером */
+  .modal { position: fixed; inset: 0; z-index: 50; background: rgba(5,4,10,.85); backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .modal-box { position: relative; width: 100%; max-width: 760px; max-height: 100%; overflow-y: auto;
+    background: var(--card); border: 1px solid var(--line); border-radius: 18px; }
+  .video { position: relative; aspect-ratio: 16 / 9; background: #000; }
+  .video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .modal-body { padding: 16px 18px 18px; }
+  .modal-body h3 { margin: 0 0 4px; font-size: 20px; }
+  .modal-body .genre { color: var(--accent2); font-size: 14px; }
+  .modal-body p { color: #d6d1e2; font-size: 15px; line-height: 1.55; margin: 10px 0 0; }
+  .modal-body .yt { display: inline-block; margin-top: 12px; color: var(--muted); font-size: 13px; }
+  .modal-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 8px 8px 16px; }
+  .modal-top span { color: var(--muted); font-size: 13px; }
+  .close { flex: none; width: 36px; height: 36px; border-radius: 50%; border: 0;
+    background: rgba(255,255,255,.08); color: #fff; font-size: 18px; line-height: 1; cursor: pointer; }
+  body.lock { overflow: hidden; }
+
+  /* ===== Оформление: шрифты, фон, карточки ===== */
+  body { font-family: 'Manrope', -apple-system, "Segoe UI", Roboto, Arial, sans-serif; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background: radial-gradient(900px 520px at 0% -10%, rgba(139,92,246,.22), transparent 60%),
+                radial-gradient(800px 480px at 100% 10%, rgba(34,211,238,.12), transparent 60%),
+                radial-gradient(700px 500px at 50% 110%, rgba(139,92,246,.10), transparent 60%); }
+  h1, h2, .brand-sm, .drawer-brand { font-family: 'Unbounded', 'Manrope', sans-serif; letter-spacing: -.3px; }
+  h2, .cat-h h2 { font-size: 19px; font-weight: 700; }
+  .cat, section { scroll-margin-top: 72px; }
+  #about, #reviews, #games { margin-top: 44px; }
+  .tariff, .item, .game, .ab, .step, .panel, .rv-card {
+    background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.015)), var(--card);
+    border-color: rgba(255,255,255,.07); }
+  .item, .game, .ab { border-radius: 18px; }
+  .item:hover:not(:disabled), .game:hover { border-color: rgba(139,92,246,.55);
+    box-shadow: 0 10px 30px rgba(0,0,0,.35), 0 0 0 1px rgba(139,92,246,.25); }
+  .item, .game { transition: border-color .2s, transform .2s, box-shadow .2s; }
+  .tariff b { font-family: 'Unbounded', sans-serif; font-weight: 500; font-size: 15px; }
+  .btn { box-shadow: 0 10px 30px rgba(109,40,217,.35); }
+
+  /* Верхняя панель */
+  .topbar { position: sticky; top: 0; z-index: 45; display: flex; align-items: center; justify-content: space-between;
+    gap: 10px; padding: 10px 14px; background: rgba(13,11,20,.72); backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px); border-bottom: 1px solid rgba(255,255,255,.06); }
+  .ic-btn { width: 42px; height: 42px; flex: none; display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 12px; border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.04); color: var(--text);
+    cursor: pointer; padding: 0; text-decoration: none; }
+  .ic-btn svg { width: 22px; height: 22px; }
+  .ic-btn.wa { color: #25d366; }
+  .brand-sm { font-weight: 700; font-size: 16px; text-decoration: none;
+    background: linear-gradient(90deg, #c4b5fd, var(--accent2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+  /* Меню слева */
+  .scrim { position: fixed; inset: 0; z-index: 70; background: rgba(5,4,10,.6); backdrop-filter: blur(3px);
+    opacity: 0; pointer-events: none; transition: opacity .25s; }
+  .drawer { position: fixed; top: 0; bottom: 0; left: 0; z-index: 71; width: min(310px, 86vw); display: flex; flex-direction: column;
+    background: linear-gradient(180deg, #1a1626, #121019); border-right: 1px solid rgba(255,255,255,.07);
+    box-shadow: 20px 0 50px rgba(0,0,0,.5); transform: translateX(-102%); transition: transform .28s cubic-bezier(.2,.8,.2,1);
+    padding: 16px 14px calc(16px + env(safe-area-inset-bottom)); overflow-y: auto; }
+  body.menu-open .scrim { opacity: 1; pointer-events: auto; }
+  body.menu-open .drawer { transform: none; }
+  .drawer-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .drawer-brand { font-size: 20px; font-weight: 700;
+    background: linear-gradient(90deg, #c4b5fd, var(--accent2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .nav { display: flex; flex-direction: column; gap: 4px; }
+  .nav a { display: flex; align-items: center; gap: 12px; padding: 12px 12px; border-radius: 14px; color: var(--text);
+    text-decoration: none; font-weight: 600; font-size: 15px; transition: background .15s; }
+  .nav a:hover, .nav a:active { background: rgba(139,92,246,.14); }
+  .nav .ni { width: 36px; height: 36px; flex: none; display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 11px; background: rgba(255,255,255,.05); font-size: 18px; }
+  .nav small { margin-left: auto; font-size: 12px; color: var(--muted); font-weight: 500; white-space: nowrap; }
+  .nav-sep { height: 1px; background: rgba(255,255,255,.07); margin: 10px 4px; }
+  .nav a.wa-link { color: #25d366; }
+  .nav a.wa-link .ni { background: rgba(37,211,102,.12); }
+
+  /* Шапка-приветствие */
+  header { padding: 28px 0 6px; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 99px; font-size: 12px;
+    font-weight: 700; letter-spacing: .3px; color: #c4b5fd; background: rgba(139,92,246,.12); border: 1px solid rgba(139,92,246,.3); }
+  h1 { font-size: 40px; margin-top: 14px; font-weight: 700; }
+  h1 span { background: linear-gradient(90deg, #a78bfa, var(--accent2)); -webkit-background-clip: text; background-clip: text; }
+  .lead { font-size: 16px; max-width: 520px; margin-top: 10px; }
+  .hero-cta { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 18px; }
+  .cta { display: inline-flex; align-items: center; gap: 8px; height: 46px; padding: 0 18px; border-radius: 14px;
+    font-weight: 700; font-size: 15px; text-decoration: none; border: 1px solid transparent; white-space: nowrap; }
+  .cta.primary { color: #fff; background: linear-gradient(90deg, var(--accent), #6d28d9); box-shadow: 0 10px 30px rgba(109,40,217,.35); }
+  .cta.ghost { color: var(--text); background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.1); }
+  .hero-cta .to-games, .hero-cta .wa-top { margin: 0; height: 46px; padding: 0 16px; display: inline-flex; align-items: center;
+    gap: 8px; border-radius: 14px; font-weight: 700; font-size: 15px; }
+
+  /* Отзывы — карточка со ссылкой на Instagram */
+  .rv-card { position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,.08); border-radius: 22px;
+    padding: 22px 20px; display: flex; align-items: center; gap: 18px; }
+  .rv-card::before { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .22;
+    background: radial-gradient(400px 200px at 0% 0%, #f58529, transparent 60%), radial-gradient(400px 220px at 100% 100%, #8134af, transparent 60%),
+                radial-gradient(300px 200px at 60% 0%, #dd2a7b, transparent 60%); }
+  .rv-ico { position: relative; width: 64px; height: 64px; flex: none; border-radius: 20px; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(45deg, #f58529, #dd2a7b 50%, #8134af); box-shadow: 0 10px 30px rgba(221,42,123,.35); }
+  .rv-ico svg { width: 34px; height: 34px; color: #fff; }
+  .rv-txt { position: relative; flex: 1; min-width: 0; }
+  .rv-txt b { display: block; font-size: 17px; }
+  .rv-txt .stars { color: #fbbf24; letter-spacing: 2px; font-size: 15px; }
+  .rv-txt p { margin: 4px 0 0; color: #d6d1e2; font-size: 14px; }
+  .rv-btn { position: relative; flex: none; display: inline-flex; align-items: center; gap: 6px; height: 46px; padding: 0 18px;
+    border-radius: 14px; color: #fff; font-weight: 700; font-size: 15px; text-decoration: none;
+    background: linear-gradient(90deg, #dd2a7b, #8134af); box-shadow: 0 10px 26px rgba(221,42,123,.3); }
+
+  /* Подарок от 3 суток */
+  .tariff.gifted { position: relative; border-color: rgba(251,191,36,.45);
+    background: linear-gradient(180deg, rgba(251,191,36,.10), rgba(251,191,36,.02)), var(--card); }
+  .tariff .gift { display: block; margin-top: 4px; font-size: 11px; font-weight: 700; color: #fbbf24; line-height: 1.2; }
+  .tariffs.mini .tariff .gift { font-size: 10px; }
+  .gift-note { margin: 12px 0 0; padding: 10px 14px; border-radius: 12px; font-size: 14px; font-weight: 600; color: #fde68a;
+    background: rgba(251,191,36,.10); border: 1px solid rgba(251,191,36,.35); }
+
+  /* Частые вопросы — раскрываются по нажатию */
+  #faq { margin-top: 44px; }
+  .faq { display: flex; flex-direction: column; gap: 8px; }
+  .faq details { border-radius: 16px; border: 1px solid rgba(255,255,255,.07);
+    background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.015)), var(--card); transition: border-color .2s; }
+  .faq details[open] { border-color: rgba(139,92,246,.45); }
+  .faq summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 12px; padding: 15px 16px;
+    font-weight: 700; font-size: 15px; }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: '+'; margin-left: auto; flex: none; width: 28px; height: 28px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 500;
+    background: rgba(139,92,246,.15); color: #c4b5fd; transition: transform .2s; }
+  .faq details[open] summary::after { transform: rotate(45deg); }
+  .faq .ans { padding: 0 16px 16px; color: #d6d1e2; font-size: 14px; line-height: 1.6; }
+
+  /* Игры: переключатель порядка */
+  .seg { display: inline-flex; gap: 4px; padding: 4px; border-radius: 14px; background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.07); margin: 0 0 14px; max-width: 100%; overflow-x: auto; }
+  .seg button { flex: none; height: 36px; padding: 0 14px; border: 0; border-radius: 10px; background: transparent; color: var(--muted);
+    font: inherit; font-weight: 700; font-size: 14px; cursor: pointer; white-space: nowrap; }
+  .seg button.on { background: linear-gradient(90deg, var(--accent), #6d28d9); color: #fff; }
+  .g-h { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; margin: 14px 0 0; font-size: 15px; font-weight: 800; }
+  .g-h:first-child { margin-top: 0; }
+  .g-h span { font-size: 12px; font-weight: 600; color: var(--muted); background: rgba(255,255,255,.05); border-radius: 99px; padding: 2px 9px; }
+
+  /* Телефон */
+  @media (max-width: 640px) {
+    .games { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .game .body { padding: 8px 10px 10px; }
+    .game .name { font-size: 14px; line-height: 1.3; }
+    .game .gd { font-size: 12px; }
+    .play { width: 38px; height: 38px; font-size: 14px; }
+    .modal { padding: 0; align-items: flex-end; }
+    .modal-box { border-radius: 18px 18px 0 0; max-height: 92vh; }
+    .modal-body { padding: 14px 16px 22px; }
+    .wrap { padding: 16px 14px 40px; }
+    h1 { font-size: 25px; }
+    .lead { font-size: 14px; }
+    .step { padding: 10px 4px; font-size: 11px; }
+    .step b { font-size: 13px; }
+    .tariffs, .grid { grid-template-columns: 1fr 1fr; }
+    .ph { height: 120px; font-size: 38px; }
+    .panel { padding: 16px 14px; border-radius: 16px; }
+    .fields .full { grid-column: 1 / -1; }
+    .line { grid-template-columns: 1fr auto; }
+    .line .k { grid-column: 1 / -1; }
+    .total b { font-size: 23px; }
+    .info { grid-template-columns: 1fr; }
+    .info-ph { min-height: 190px; }
+  }
+  @media (max-width: 640px) {
+    header { padding-top: 18px; }
+    h1 { font-size: 30px; }
+    .lead { font-size: 15px; }
+    .hero-cta { gap: 8px; }
+    .hero-cta > a { flex: 1 1 calc(50% - 8px); justify-content: center; padding: 0 10px; font-size: 14px; gap: 6px; }
+    .hero-cta .wa-top { flex-basis: 100%; }
+    .rv-card { flex-direction: column; text-align: center; padding: 22px 16px; gap: 14px; }
+    .rv-btn { width: 100%; justify-content: center; }
+    #about, #reviews, #games { margin-top: 36px; }
+  }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <button type="button" class="ic-btn" id="menuBtn" aria-label="Открыть меню">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg></button>
+  <a href="#top" class="brand-sm" id="brandSm">WAY_VR</a>
+  <a class="ic-btn wa hide" id="waBar" target="_blank" rel="noopener" aria-label="Написать в WhatsApp"></a>
+</div>
+<div class="scrim" id="scrim"></div>
+<nav class="drawer" id="drawer" aria-label="Меню">
+  <div class="drawer-top"><span class="drawer-brand" id="drawerBrand">WAY_VR</span>
+    <button type="button" class="ic-btn" id="menuClose" aria-label="Закрыть меню">✕</button></div>
+  <div class="nav" id="nav"></div>
+</nav>
+<div class="wrap" id="top">
+  <header>
+    <span class="eyebrow">✦ Прокат VR · Грозный</span>
+    <h1><span id="brand">WAY_VR</span></h1>
+    <p class="lead">Выберите VR-шлем или умные очки, оплатите переводом или наличными при получении — бронь сразу закрепится за вами.</p>
+    <div class="hero-cta">
+      <a href="#cats" class="cta primary" id="toCats">🥽 Забронировать</a>
+      <a href="#games" class="to-games cta ghost hide" id="toGames">🎮 Игры</a>
+      <a class="wa-top hide" id="waTop" target="_blank" rel="noopener"></a>
+    </div>
+  </header>
+  <a class="wa-float hide" id="waFloat" target="_blank" rel="noopener" aria-label="Написать в WhatsApp"></a>
+
+  <div class="steps">
+    <div class="step"><i>1</i><b>Выберите</b>свободное устройство</div>
+    <div class="step"><i>2</i><b>Оплатите</b>переводом или при получении</div>
+    <div class="step"><i>3</i><b>Готово</b>бронь ваша</div>
+  </div>
+
+  <div id="main">
+    <div id="cats"><div class="skeleton">Загружаем список…</div></div>
+
+    <div id="form" class="hide">
+      <h2>Оформление: <span id="selName"></span></h2>
+      <div class="panel">
+
+        <div class="info">
+          <div class="info-ph" id="infoPh"></div>
+          <div class="info-body">
+            <p class="info-t" id="infoT"></p>
+            <div class="info-d" id="infoD"></div>
+            <div class="tariffs mini" id="infoTar"></div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <p class="sec-t"><i>1</i>Ваши данные</p>
+          <div class="fields">
+            <div class="full"><label for="name">Ф.И.О.</label><input id="name" type="text" autocomplete="name" placeholder="Иванов Иван Иванович"></div>
+            <div class="full"><label for="phone">Телефон</label><input id="phone" type="tel" autocomplete="tel" placeholder="+7 900 123-45-67"></div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <p class="sec-t"><i>2</i>Когда и на сколько</p>
+          <div class="fields">
+            <div><label for="date">Дата получения</label><input id="date" type="date"></div>
+            <div><label for="time">Время</label><input id="time" type="time" value="12:00"></div>
+            <div><label for="qty">Срок, суток</label><input id="qty" type="number" inputmode="numeric" min="1" max="30" value="1"></div>
+            <div><label>Вернуть до</label><div id="endAt" class="endAt">—</div></div>
+          </div>
+          <p class="gift-note hide" id="giftNote"></p>
+        </div>
+
+        <div class="sec">
+          <p class="sec-t"><i>3</i>Фото паспорта</p>
+          <label class="upload" for="passBoth" id="passBox">
+            <span id="passText">📷 Добавить 2 фото паспорта<br>
+              <small class="muted">главная страница и прописка — в галерее можно отметить сразу оба</small></span>
+            <span class="shots hide" id="passShots"></span>
+          </label>
+          <input id="passBoth" type="file" accept="image/*" multiple class="hide">
+          <p class="small">🔒 Фото видит только владелец проката. Они нужны для выдачи шлема.</p>
+        </div>
+
+        <div class="sec">
+          <p class="sec-t"><i>4</i>Оплата</p>
+          <div class="total"><span>К оплате</span><b id="sum">0 ₽</b></div>
+          <div class="pay-ways" id="payWays">
+            <button type="button" class="pay-way on" data-pay="transfer">💳 Переводом<small>сейчас, по реквизитам</small></button>
+            <button type="button" class="pay-way" data-pay="cash">💵 Наличными<small>при получении</small></button>
+          </div>
+          <div id="payTransfer">
+            <div class="req" id="req"></div>
+            <div id="receipt"></div>
+          </div>
+          <div id="payCash" class="cash-note hide">Оплатите <b id="sum3">0 ₽</b> наличными, когда будете забирать устройство.
+            Бронь подтвердим звонком.</div>
+
+          <label class="check" id="paidRow"><input type="checkbox" id="paid">
+            <span>Я перевёл(а) <b id="sum2">0 ₽</b> по реквизитам выше</span></label>
+          <button class="btn" id="go" disabled>Я оплатил — забронировать</button>
+          <div id="err" class="msg err hide"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <section id="about" class="hide">
+      <div class="cat-h"><h2>О прокате</h2></div>
+      <div class="about" id="aboutList"></div>
+    </section>
+
+    <section id="faq" class="hide">
+      <div class="cat-h"><h2>Частые вопросы</h2></div>
+      <div class="faq" id="faqList"></div>
+    </section>
+
+    <section id="reviews" class="hide">
+      <div class="cat-h"><h2>Отзывы клиентов</h2></div>
+      <div class="rv-card">
+        <div class="rv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></div>
+        <div class="rv-txt"><span class="stars">★★★★★</span><b>Реальные отзывы наших клиентов</b>
+          <p>Собрали их в актуальном Instagram — фото, видео и переписки после аренды.</p></div>
+        <a class="rv-btn" id="reviewsLink" target="_blank" rel="noopener">Смотреть отзывы ↗</a>
+      </div>
+    </section>
+
+    <section id="games" class="hide">
+      <div class="cat-h"><h2 id="gamesT">Игры на VR-шлеме</h2><span id="gamesN"></span></div>
+      <div class="seg" id="gameSort">
+        <button type="button" data-sort="az" class="on">А–Я</button>
+        <button type="button" data-sort="genre">По жанрам</button>
+        <button type="button" data-sort="coop">👥 Кооп</button>
+      </div>
+      <p class="coop-hint hide" id="coopHint"><span class="coop" id="coopHintBadge">Вместе</span>— в эти игры можно играть вместе с друзьями</p>
+      <div class="games" id="gamesList"></div>
+    </section>
+  </div>
+
+  <div id="modal" class="modal hide" role="dialog" aria-modal="true">
+    <div class="modal-box">
+      <div class="modal-top"><span>🎮 Трейлер игры</span><button class="close" id="mClose" aria-label="Закрыть">✕</button></div>
+      <div class="video" id="mVideo"></div>
+      <div class="modal-body">
+        <h3 id="mT"></h3>
+        <div class="genre" id="mG"></div>
+        <p id="mD"></p>
+        <a class="yt" id="mYt" target="_blank" rel="noopener">Не открывается видео? Смотреть на YouTube ↗</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="done" class="panel done hide">
+    <div class="big">✅</div>
+    <h2>Бронь оформлена</h2>
+    <p class="muted" style="margin:0 0 10px">№ <span id="dNum"></span></p>
+    <p id="dText"></p>
+    <p class="muted" id="dNote">Мы проверим поступление оплаты и свяжемся с вами по телефону.</p>
+    <div id="dReceipt"></div>
+  </div>
+</div>
+
+<script type="application/json" id="initData">null</script>
+<script>
+  const API_URL = 'https:\/\/script.google.com/macros/s/AKfycbw4r7GVTggk5RnNq6HSJuuZiw04T5Zs1bRgoVeaata2J4EkKLH_s8mZ7mTsqgjMH5Rb/exec';
+  const IS_GAS = typeof google !== 'undefined' && google.script && google.script.run;
+  const IS_DEMO = !IS_GAS && (location.protocol === 'file:' || /^(localhost|127\.0\.0\.1)$/.test(location.hostname))
+    && !/[?&]api=1/.test(location.search);
+  const DEMO = {
+    cats: [
+      { key: 'VR', title: 'VR-шлемы Meta Quest 3', photo: '',
+        desc: 'Meta Quest 3 с креплением BOBOVR S3 Pro.\nВ комплекте: шлем, 2 контроллера, зарядка.',
+        prices: { p1: 2000, p2: 3500, p3: 4500, extra: 1000 },
+        items: [1, 2, 3, 4, 5, 6, 7, 8].map(n => ({ id: 'VR-0' + n, name: 'VR #' + n, free: n !== 2, photo: '' })) },
+      { key: 'RB', title: 'Очки Ray-Ban Meta (оригинал)', photo: '',
+        desc: 'Оригинальные умные очки Ray-Ban Meta.\n• Фото и видео от первого лица\n• Музыка и звонки без наушников\nВ комплекте: очки и зарядный кейс.',
+        prices: { p1: 1500, p2: 2500, p3: 3500, extra: 1000 },
+        items: [1, 2].map(n => ({ id: 'RB-0' + n, name: 'Ray-Ban Meta #' + n, free: true, photo: '' })) },
+    ],
+    gamesTitle: 'Игры на VR-шлеме',
+    about: '🚚 Доставка и получение:\n• Бесплатная доставка по Грозному при аренде от 3 суток\n• Доступен самовывоз\n• Можно забронировать заранее на удобную дату\n\n' +
+      '🧼 Чистота оборудования:\nПосле каждого проката шлем очищается, дезинфицируется и проверяется.\n\n' +
+      '📋 Условия аренды:\n• Для оформления нужны фото главной страницы паспорта и страницы с регистрацией\n• Залог не требуется',
+    reviewsLink: 'https:\/\/www.instagram.com/s/aGlnaGxpZ2h0OjE4MDgwMTM0Mzk2NTYxMzU0',
+    faq: 'Можно ли играть без телевизора и компьютера?\nДа. Игры уже встроены в шлем. Достаточно места примерно 2 × 2 метра.\n\n' +
+      'Если мы сломаем шлем, придётся платить полную стоимость?\nНет. Мы оцениваем ущерб по запчастям и работе мастера. Всегда идём навстречу 🤝\n\n' +
+      'На сколько хватает заряда?\n2–3 часа непрерывной игры плюс съёмный аккумулятор.',
+    games: [
+      ['HITMAN 3 VR: Reloaded', 'Стелс / экшен', '18+', 'Станьте Агентом 47: проникайте на закрытые вечеринки, переодевайтесь и выполняйте контракты.', 'GahlBZqbaow'],
+      ['Marvel’s Deadpool VR', 'Экшен / комедия', '18+', 'Дэдпул в VR: безумные драки и чёрный юмор.', 'Lmm0qSBF_iQ'],
+      ['Hazard Us', 'Кооператив (можно играть вместе)', '6+', 'Проходите ловушки и головоломки командой.', 'x4vP6VoUuWg'],
+      ['I Am Security', 'Симулятор / юмор', '12+', '«Please step aside, I am security!» — станьте охранником ночного клуба или аэропорта.', 'Op4nC8Bn-v0'],
+      ['LaserTag', 'Кооператив (можно играть вместе)', '', 'Лазертаг прямо у вас дома: комната превращается в арену.', 'T1PIcuOYmXU'],
+      ['Population: One', 'Кооператив (можно играть вместе)', '12+', 'Королевская битва в VR: собирайтесь в команду, лазайте по стенам и летайте на крыльях.', 'k7INK9V1zjQ'],
+      ['AIM XR', 'Кооператив (можно играть вместе)', '16+', 'Командный шутер: играйте вместе с друзьями в одной команде или друг против друга.', 'jlLhuFiBAN4'],
+      ['Hard Bullet', 'Экшен / шутер', '18+', 'Боевик с реалистичной физикой и замедлением времени.', 'QMfgy0M5o6k'],
+      ['I Am Monkey', 'Юмор / приключение', '12+', 'Станьте обезьяной, которая сбежала из зоопарка, и устройте весёлый хаос.', 'LJCfvsjFybM'],
+      ['I Am Cat', 'Кооператив (можно играть вместе)', '6+', 'Станьте котом и хулиганьте в доме у бабушки.', 'PpjV6dkZf6o'],
+      ['The Thrill of the Fight 2', 'Спорт / бокс', '12+', 'Самый реалистичный бокс в VR.', 'kLcRgVrSK3Y'],
+      ['Scary Hot Dogs', 'Симулятор / хоррор-юмор', '12+', 'Ларёк с хот-догами, где покупатели — монстры.', 'ccNFK_4P2s4'],
+      ['Beat Saber', 'Ритм / музыка', '6+', 'Рубите световыми мечами блоки под музыку. Самая популярная VR-игра: подходит всем, отлично заходит на вечеринках и хорошо разминает.', '1DJwC2kYrl8'],
+      ['Batman: Arkham Shadow', 'Экшен / приключение', '16+', 'Станьте Бэтменом: драки, гаджеты, расследования и полёты над Готэмом.', 'XpN_Abd1RQc'],
+      ['SUPERHOT VR', 'Экшен / головоломка', '16+', 'Время движется, только когда двигаетесь вы.', 'VeqHQ_Y8BUw'],
+      ['Job Simulator', 'Юмор / для всей семьи', '6+', 'Весёлая игра про «работу» в мире роботов. Отличный первый опыт VR.', 'O2tvoeJxLSU'],
+      ['The Walking Dead: Saints & Sinners', 'Хоррор / выживание', '18+', 'Выживайте в затопленном Новом Орлеане среди зомби.', 'vxf5dFQy31c'],
+    ].map(([title, genre, age, desc, video]) => ({ title, genre, age, desc, video, photo: 'https:\/\/i.ytimg.com/vi/' + video + '/hqdefault.jpg' })),
+    settings: { title: 'WAY_VR', cash: true, gift: '🎁 доставка бесплатно', whatsapp: '', receiver: 'Изнаур Вахаевич М.', bank: 'Сбербанк | Т-Банк', card: '2202000000000000',
+      cards: [{ key: 'sber', bank: 'Сбербанк', number: '5469980473873376' }, { key: 'tbank', bank: 'Т-Банк', number: '5536914119978736' }],
+      sbp: '7(938)910-04-44', receipt: 'https:\/\/wa.me/79000000000' }
+  };
+
+  const unwrap = r => r.json().then(j => { if (!j.ok) throw new Error(j.error || 'Ошибка сервера'); return j.data; });
+  function call(fn, arg) {
+    if (!IS_GAS && !IS_DEMO) {
+      if (fn === 'getData') return fetch(API_URL + '?api=data&t=' + Date.now()).then(unwrap);
+      return fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: fn, arg: arg }) }).then(unwrap);
+    }
+    if (IS_DEMO) {
+      if (fn === 'getData') return Promise.resolve(DEMO);
+      const cat = DEMO.cats.find(c => c.items.some(i => i.id === arg.id));
+      const it = cat.items.find(i => i.id === arg.id);
+      it.free = false;
+      const s = new Date(arg.date + 'T' + arg.time), e = new Date(+s + arg.days * 864e5);
+      return Promise.resolve({ id: 'BR-DEMO000001', name: it.name, start: fmt(s), end: fmt(e),
+        days: arg.days, sum: priceFor(cat.prices, arg.days) });
+    }
+    return new Promise((res, rej) => google.script.run.withSuccessHandler(res).withFailureHandler(rej)[fn](arg));
+  }
+
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const rub = n => Number(n).toLocaleString('ru-RU') + ' ₽';
+  const pad = n => String(n).padStart(2, '0');
+  const fmt = d => `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const priceFor = (p, d) => d === 1 ? p.p1 : d === 2 ? p.p2 : p.p3 + (d - 3) * p.extra;
+  const colorBanks = html => html
+    .replace(/(Сбер[а-яё]*)/gi, '<span class="sber">$1</span>')
+    .replace(/(Т-?\s?Банк|Тинькофф)/gi, '<span class="tbank">$1</span>');
+  const BANK_LOGO = {
+    sber: '<svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="16" fill="#21a038"/>' +
+      '<path d="M8.5 16.2l5 4.6 10-10.3" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    tbank: '<svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><path d="M3 3h26v14.5c0 6-5.5 9.8-13 11.5C8.5 27.3 3 23.5 3 17.5z" fill="#ffdd2d"/>' +
+      '<path d="M9.5 9.5h13v3.6h-4.7V22h-3.6v-8.9H9.5z" fill="#1c1c1c"/></svg>',
+  };
+  BANK_LOGO.sbp = '<svg class="logo" viewBox="-0.5 -0.5 32 32.5" aria-hidden="true">' +
+    '<path fill="#5B57A2" d="M0 7.2l4.6 8.2v5L0 28.6z"/><path fill="#D90751" d="M17.7 12.4l4.3-2.6h8.8l-13.1 8z"/>' +
+    '<path fill="#FAB61F" d="M17.7 7.1v10.8l-4.6-2.8V0z"/><path fill="#ED6F26" d="M30.8 9.8H22l-4.3-2.7L4.6 0z"/>' +
+    '<path fill="#63B22F" d="M17.7 28.7v-5.2l-4.6-2.8v10.6z"/><path fill="#1487C9" d="M22 25.9L4.6 15.4 0 7.2l30.8 18.7z"/>' +
+    '<path fill="#017F36" d="M13.1 31.3l4.6-2.6 13.1-2.8z"/><path fill="#984995" d="M0 28.6l13.1-8-4.4-2.7L0 23.3z"/></svg>';
+  const fmtPhone = p => {
+    const d = String(p).replace(/\D/g, '');
+    const m = /^[78]?(\d{3})(\d{3})(\d{2})(\d{2})$/.exec(d);
+    return m ? `+7(${m[1]})${m[2]}-${m[3]}-${m[4]}` : String(p).trim();
+  };
+  const groupCard = n => String(n).replace(/\s/g, '').replace(/(\d{4})(?=\d)/g, '$1 ');
+  const daysWord = n => (n % 10 === 1 && n % 100 !== 11) ? 'сутки' : 'суток';
+  const WA_ICO = '<svg class="wa-ico" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true"><path d="M16 3C8.8 3 3 8.7 3 15.8c0 2.5.7 4.9 2 7L3 29l6.4-2c2 1.1 4.3 1.7 6.6 1.7 7.2 0 13-5.7 13-12.8S23.2 3 16 3zm0 23.4c-2.1 0-4.1-.6-5.9-1.7l-.4-.3-3.8 1.2 1.2-3.7-.3-.4c-1.2-1.8-1.9-3.9-1.9-6C4.9 9.8 9.9 4.9 16 4.9s11.1 4.9 11.1 10.9S22.1 26.4 16 26.4zm6.1-8.1c-.3-.2-2-1-2.3-1.1-.3-.1-.5-.2-.8.2-.2.3-.9 1.1-1.1 1.3-.2.2-.4.3-.7.1-.3-.2-1.4-.5-2.7-1.7-1-.9-1.7-2-1.9-2.3-.2-.3 0-.5.1-.7l.5-.6c.2-.2.2-.3.3-.6.1-.2.1-.4 0-.6l-1.1-2.6c-.3-.7-.6-.6-.8-.6h-.7c-.2 0-.6.1-.9.4-.3.3-1.2 1.1-1.2 2.8s1.2 3.2 1.4 3.5c.2.2 2.4 3.6 5.8 5 .8.3 1.4.5 1.9.7.8.3 1.5.2 2.1.1.6-.1 2-.8 2.2-1.6.3-.8.3-1.4.2-1.6-.1-.2-.3-.3-.6-.4z"/></svg>';
+  function waNumber(s) {
+    const fromLink = (/wa\.me\/(\d{10,15})/.exec(s.receipt || '') || [])[1];
+    let d = String(s.whatsapp || fromLink || s.sbp || '').replace(/\D/g, '');
+    if (d.length === 11 && d[0] === '8') d = '7' + d.slice(1);
+    if (d.length === 10) d = '7' + d;
+    return d.length >= 11 ? d : '';
+  }
+  function renderWa(s) {
+    const n = waNumber(s);
+    const url = n ? 'https:\/\/wa.me/' + n + '?text=' + encodeURIComponent('Здравствуйте! Хочу спросить про прокат VR (' + (s.title || 'WAY_VR') + ').') : '';
+    $('waTop').href = $('waFloat').href = $('waBar').href = url;
+    $('waTop').innerHTML = WA_ICO + 'Есть вопрос? Напишите в WhatsApp';
+    $('waFloat').innerHTML = WA_ICO + 'Задать вопрос';
+    $('waBar').innerHTML = WA_ICO;
+    if (!n) { $('waTop').removeAttribute('href'); }
+    $('waTop').classList.toggle('hide', !n);
+    $('waFloat').classList.toggle('hide', !n);
+    $('waBar').classList.toggle('hide', !n);
+  }
+  if ('IntersectionObserver' in window) {
+    const seen = new Set();
+    const io = new IntersectionObserver(es => {
+      es.forEach(x => x.isIntersecting ? seen.add(x.target) : seen.delete(x.target));
+      $('waFloat').classList.toggle('away', seen.size > 0);
+    });
+    ['go', 'waTop', 'done'].forEach(id => io.observe($(id)));
+  }
+
+  function receiptButton(url, text) {
+    if (!url) return '';
+    const cls = /wa\.me|whatsapp/i.test(url) ? 'wa' : /t\.me|telegram/i.test(url) ? 'tg' : '';
+    const where = cls === 'wa' ? ' в WhatsApp' : cls === 'tg' ? ' в Telegram' : '';
+    return `<a class="receipt ${cls}" href="${esc(url)}" target="_blank" rel="noopener">💬 ${text}${where}</a>`;
+  }
+  let data = null, selected = null, selCat = null;
+
+  let initData = null;
+  try { initData = JSON.parse($('initData').textContent); } catch (e) { initData = null; }
+
+  const CACHE_KEY = 'wayvr-data';
+  const cacheGet = () => { try { return JSON.parse(localStorage.getItem(CACHE_KEY)); } catch (e) { return null; } };
+  const cacheSet = d => { try { localStorage.setItem(CACHE_KEY, JSON.stringify(d)); } catch (e) {} };
+
+  async function load(force) {
+    const useCache = !IS_GAS && !IS_DEMO;
+    let shown = false;
+    if (useCache && !data) {
+      const c = cacheGet();
+      if (c && Array.isArray(c.cats)) { data = c; render(); shown = true; }
+    }
+    try {
+      let fresh;
+      if (initData) { fresh = initData; initData = null; } else fresh = await call('getData');
+      if (!fresh || !Array.isArray(fresh.cats)) throw new Error('на сервере старая версия Код.gs. Замените Код.gs на новый и сделайте новое развертывание.');
+      data = fresh;
+      if (useCache) cacheSet(fresh);
+      if (!selected || force) render();
+    } catch (e) {
+      if (!shown) $('cats').innerHTML = '<div class="msg err">Не удалось загрузить список: ' + esc(e.message || e) + '</div>';
+    }
+  }
+
+  const emojiFor = c => c.key === 'VR' ? '🥽' : '🕶️';
+  const giftText = () => String((data && data.settings && data.settings.gift) || '').trim();
+  const tariffsHtml = p => [['1 сутки', rub(p.p1)], ['2 суток', rub(p.p2)], ['3 суток', rub(p.p3), giftText()], ['доп. сутки', '+' + rub(p.extra)]]
+    .map(([t, v, gift]) => `<div class="tariff${gift ? ' gifted' : ''}"><span>${t}</span><b>${v}</b>${gift ? `<small class="gift">${esc(gift)}</small>` : ''}</div>`).join('');
+  const photoHtml = (url, alt) => url
+    ? `<img src="${esc(url)}" alt="${esc(alt)}" loading="lazy" onerror="this.parentNode.classList.remove('has-img');this.remove()">` : '';
+  const textHtml = t => esc(t).replace(/\n/g, '<br>');
+
+  function render() {
+    const s = data.settings;
+    $('brand').textContent = s.title; document.title = s.title;
+
+    if (!data.cats.length) { $('cats').innerHTML = '<div class="skeleton">Пока нет устройств в списке.</div>'; return; }
+    $('cats').innerHTML = data.cats.map(c => {
+      const items = c.items.slice().sort((a, b) => b.free - a.free);
+      const free = items.filter(i => i.free).length;
+      return `<section class="cat" id="cat-${esc(c.key)}">
+        <div class="cat-h"><h2>${esc(c.title)}</h2><span>свободно ${free} из ${items.length}</span></div>
+        <div class="tariffs">${tariffsHtml(c.prices)}</div>
+        <div class="grid">${free ? '' : '<div class="skeleton">Сейчас всё занято. Загляните позже.</div>'}${items.map(it => `
+          <button class="item ${selected && selected.id === it.id ? 'sel' : ''}" data-id="${esc(it.id)}" ${it.free ? '' : 'disabled'}>
+            <div class="ph ${it.photo ? 'has-img' : ''}">${photoHtml(it.photo, it.name)}<span class="emoji">${emojiFor(c)}</span><span class="badge ${it.free ? 'free' : 'busy'}">${it.free ? 'Свободно' : 'Занято'}</span></div>
+            <div class="body">
+              <div class="name">${esc(it.name)}</div>
+              <div class="price">от <b>${rub(c.prices.p1)}</b> / сутки</div>
+            </div>
+          </button>`).join('')}</div>
+      </section>`;
+    }).join('');
+    $('cats').querySelectorAll('.item:not(:disabled)').forEach(b => b.onclick = () => select(b.dataset.id));
+
+    const cards = s.cards || [];
+    const lines = [['Получатель', esc(s.receiver || ''), null]]
+      .concat(cards.length
+        ? cards.map(c => [`<span class="bank">${BANK_LOGO[c.key] || ''}<span class="${c.key}">${esc(c.bank)}</span></span>`,
+            esc(groupCard(c.number)), c.number])
+        : [['Банк', s.bank && colorBanks(esc(s.bank)), null], ['Номер карты', esc(s.card || ''), s.card]])
+      .concat([[`<span class="bank">${BANK_LOGO.sbp}<span>СБП по телефону</span></span>`,
+        esc(fmtPhone(s.sbp || '')), s.sbp && fmtPhone(s.sbp).replace(/[^\d+]/g, '')]])
+      .filter(l => l[1]);
+    $('req').innerHTML = lines.map(([k, v, copy]) => `<div class="line"><span class="k">${k}</span>
+      <span class="v">${v}</span>${copy ? `<button class="copy" data-v="${esc(copy)}">копировать</button>` : '<span></span>'}</div>`).join('');
+    $('req').querySelectorAll('.copy').forEach(b => b.onclick = () => {
+      navigator.clipboard.writeText(b.dataset.v.replace(/[\s()-]/g, '')).then(() => {
+        b.textContent = 'скопировано ✓'; setTimeout(() => b.textContent = 'копировать', 1500);
+      });
+    });
+    $('receipt').innerHTML = receiptButton(s.receipt, 'Отправить чек');
+    renderWa(s);
+    $('payWays').classList.toggle('hide', !s.cash);
+    if (!s.cash && pay === 'cash') setPay('transfer');
+    renderAbout();
+    renderFaq();
+    renderReviews();
+    renderGames();
+    buildNav();
+    $('brandSm').textContent = $('drawerBrand').textContent = s.title;
+  }
+
+  function renderAbout() {
+    const blocks = String(data.about || '').replace(/\r/g, '').split(/\n\s*\n/).map(b => b.split('\n').map(l => l.trim()).filter(Boolean)).filter(b => b.length);
+    $('about').classList.toggle('hide', !blocks.length);
+    $('aboutList').innerHTML = blocks.map(b => {
+      const [title, ...rest] = b;
+      let html = '', list = [];
+      const flush = () => { if (list.length) { html += '<ul>' + list.map(x => `<li>${esc(x)}</li>`).join('') + '</ul>'; list = []; } };
+      rest.forEach(l => {
+        if (/^[•\-–*]\s*/.test(l)) list.push(l.replace(/^[•\-–*]\s*/, ''));
+        else { flush(); html += `<p>${esc(l)}</p>`; }
+      });
+      flush();
+      return `<div class="ab"><h3>${esc(title.replace(/:\s*$/, ''))}</h3>${html}</div>`;
+    }).join('');
+  }
+
+  function renderFaq() {
+    const items = String(data.faq || '').replace(/\r/g, '').split(/\n\s*\n/)
+      .map(b => b.split('\n').map(l => l.trim()).filter(Boolean)).filter(b => b.length >= 2);
+    $('faq').classList.toggle('hide', !items.length);
+    $('faqList').innerHTML = items.map(([q, ...a]) =>
+      `<details><summary>${esc(q)}</summary><div class="ans">${a.map(esc).join('<br>')}</div></details>`).join('');
+  }
+
+  function renderReviews() {
+    $('reviews').classList.toggle('hide', !data.reviewsLink);
+    $('reviewsLink').href = data.reviewsLink || '#';
+  }
+
+  function buildNav() {
+    const g = data.games || [];
+    const links = data.cats.map(c => {
+      const free = c.items.filter(i => i.free).length;
+      return [`#cat-${c.key}`, emojiFor(c), c.title, `свободно ${free}`];
+    });
+    if (g.length) links.push(['#games', '🎮', 'Игры на шлеме', g.length + ' ' + gameWord(g.length)]);
+    if (data.about) links.push(['#about', 'ℹ️', 'О прокате', '']);
+    if (data.faq) links.push(['#faq', '❓', 'Частые вопросы', '']);
+    if (data.reviewsLink) links.push(['#reviews', '⭐', 'Отзывы', '']);
+    let html = links.map(([href, ico, t, meta]) =>
+      `<a href="${href}" data-go="${href}"><span class="ni">${ico}</span>${esc(t)}${meta ? `<small>${esc(meta)}</small>` : ''}</a>`).join('');
+    const wa = $('waTop').getAttribute('href');
+    if (wa) html += `<div class="nav-sep"></div><a href="${esc(wa)}" class="wa-link" target="_blank" rel="noopener"><span class="ni">${WA_ICO}</span>Написать в WhatsApp</a>`;
+    if (data.reviewsLink) html += `<a href="${esc(data.reviewsLink)}" target="_blank" rel="noopener"><span class="ni">📸</span>Отзывы в Instagram</a>`;
+    $('nav').innerHTML = html;
+    $('nav').querySelectorAll('[data-go]').forEach(a => a.onclick = e => { e.preventDefault(); closeMenu(); goTo(a.dataset.go); });
+  }
+  function goTo(sel) { const el = document.querySelector(sel); if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth' }), 120); }
+  function openMenu() { document.body.classList.add('menu-open', 'lock'); }
+  function closeMenu() { document.body.classList.remove('menu-open'); if ($('modal').classList.contains('hide')) document.body.classList.remove('lock'); }
+  $('menuBtn').onclick = openMenu;
+  $('menuClose').onclick = closeMenu;
+  $('scrim').onclick = closeMenu;
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.body.classList.contains('menu-open')) closeMenu(); });
+  $('brandSm').onclick = e => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  $('toCats').onclick = e => { e.preventDefault(); $('cats').scrollIntoView({ behavior: 'smooth' }); };
+
+  const gameWord = n => n % 10 === 1 && n % 100 !== 11 ? 'игра' : [2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100) ? 'игры' : 'игр';
+  const COOP_ICON = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true">' +
+    '<circle cx="9" cy="7.5" r="3.5"/><path d="M2 20c0-4 3.1-6.5 7-6.5s7 2.5 7 6.5z"/>' +
+    '<circle cx="17" cy="8.5" r="2.8" opacity=".75"/><path d="M17.5 13.6c2.7.3 4.5 2.4 4.5 5.4h-4.6c0-2-.6-3.8-1.9-5.1.6-.2 1.3-.3 2-.3z" opacity=".75"/></svg>';
+  const isCoop = x => /кооп|вместе|co-?op/i.test(x.genre || '');
+  const COOP_BADGE = '<span class="coop" title="Можно играть вместе">' + COOP_ICON + 'Вместе</span>';
+  function renderGames() {
+    const g = data.games || [];
+    $('games').classList.toggle('hide', !g.length);
+    $('toGames').classList.toggle('hide', !g.length);
+    if (!g.length) return;
+    $('gamesT').textContent = data.gamesTitle || 'Игры на VR-шлеме';
+    $('gamesN').textContent = g.length + ' ' + gameWord(g.length);
+    $('coopHint').classList.toggle('hide', !g.some(isCoop));
+    $('coopHintBadge').innerHTML = COOP_ICON + 'Вместе';
+    $('gameSort').querySelectorAll('button').forEach(b => {
+      b.classList.toggle('on', b.dataset.sort === gameSort);
+      b.onclick = () => { gameSort = b.dataset.sort; renderGames(); };
+    });
+    $('gameSort').querySelector('[data-sort=coop]').classList.toggle('hide', !g.some(isCoop));
+    const byName = (a, b) => a.x.title.localeCompare(b.x.title, 'ru', { sensitivity: 'base' });
+    let list = g.map((x, i) => ({ x, i })).sort(byName);
+    if (gameSort === 'coop') list = list.filter(o => isCoop(o.x));
+    const card = ({ x, i }) => `
+      <button class="game" data-i="${i}">
+        <div class="ph ${x.photo ? 'has-img' : ''}">${photoHtml(x.photo, x.title)}<span class="emoji">🎮</span>
+          ${isCoop(x) ? COOP_BADGE : ''}
+          ${x.video ? '<span class="play">▶</span>' : ''}</div>
+        <div class="body">
+          <div class="name">${esc(x.title)}</div>
+          ${x.genre ? `<div class="genre">${esc(x.genre)}</div>` : ''}
+          ${x.desc ? `<div class="gd">${esc(x.desc)}</div>` : ''}
+        </div>
+      </button>`;
+    let html;
+    if (gameSort === 'genre') {
+      const groups = new Map(GENRE_GROUPS.map(([, name]) => [name, []]));
+      list.forEach(o => groups.get(genreGroup(o.x)).push(o));
+      html = [...groups].filter(([, items]) => items.length)
+        .map(([name, items]) => `<h3 class="g-h">${esc(name)}<span>${items.length}</span></h3>` + items.map(card).join('')).join('');
+    } else html = list.map(card).join('');
+    $('gamesList').innerHTML = html;
+    $('gamesList').querySelectorAll('.game').forEach(b => b.onclick = () => openGame(g[b.dataset.i]));
+  }
+
+  let gameSort = 'az';
+  const GENRE_GROUPS = [
+    [/кооп|вместе|co-?op/, '👥 Играть вместе'],
+    [/симулятор|юмор|магазин/, '😂 Симуляторы и юмор'],
+    [/хоррор|зомби/, '🧟 Хорроры и зомби'],
+    [/шутер/, '🔫 Шутеры'],
+    [/бокс|спорт|единоборств|тренировк|ритм|музык/, '🥊 Спорт и ритм'],
+    [/экшен|стелс|физика|открытый мир/, '💥 Экшен'],
+    [/дет|семь|для всех|головоломк|высота/, '👨‍👩‍👧 Для всей семьи'],
+    [/ролев|приключ|фэнтези|смешанн/, '🗺 Приключения'],
+    [/./, '🎮 Другое'],
+  ];
+  const genreGroup = x => (GENRE_GROUPS.find(([re]) => re.test(String(x.genre || '').toLowerCase())) || GENRE_GROUPS[GENRE_GROUPS.length - 1])[1];
+
+  function openGame(x) {
+    $('mT').textContent = x.title;
+    $('mG').innerHTML = esc(x.genre || '') + (isCoop(x) ? '<br>' + COOP_BADGE.replace('class="coop"', 'class="coop coop-inline"') : '');
+    $('mD').innerHTML = textHtml(x.desc || '');
+    $('mVideo').classList.toggle('hide', !x.video);
+    $('mYt').classList.toggle('hide', !x.video);
+    if (x.video) {
+      $('mVideo').innerHTML = `<iframe src="https:\/\/www.youtube-nocookie.com/embed/${encodeURIComponent(x.video)}?autoplay=1&rel=0&playsinline=1"
+        title="${esc(x.title)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
+      $('mYt').href = 'https:\/\/www.youtube.com/watch?v=' + encodeURIComponent(x.video);
+    }
+    $('modal').classList.remove('hide');
+    document.body.classList.add('lock');
+  }
+  function closeGame() {
+    $('mVideo').innerHTML = '';
+    $('modal').classList.add('hide');
+    document.body.classList.remove('lock');
+  }
+  $('toGames').onclick = e => { e.preventDefault(); $('games').scrollIntoView({ behavior: 'smooth' }); };
+  $('mClose').onclick = closeGame;
+  $('modal').onclick = e => { if (e.target === $('modal')) closeGame(); };
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('modal').classList.contains('hide')) closeGame(); });
+
+  function select(id) {
+    selCat = data.cats.find(c => c.items.some(i => i.id === id));
+    selected = selCat.items.find(i => i.id === id);
+    render();
+    $('selName').textContent = selected.name;
+    const ph = selected.photo || selCat.photo;
+    $('infoPh').innerHTML = photoHtml(ph, selected.name) + (ph ? '' : emojiFor(selCat));
+    $('infoT').textContent = selCat.title;
+    $('infoD').innerHTML = textHtml(selCat.desc || '');
+    $('infoTar').innerHTML = tariffsHtml(selCat.prices);
+    $('form').classList.remove('hide');
+    $('err').classList.add('hide');
+    update();
+    $('form').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function days() { return Math.min(30, Math.max(1, parseInt($('qty').value, 10) || 1)); }
+
+  function update() {
+    if (!selected) return;
+    $('sum').textContent = $('sum2').textContent = $('sum3').textContent = rub(priceFor(selCat.prices, days()));
+    $('giftNote').textContent = 'Вам подарок: ' + giftText();
+    $('giftNote').classList.toggle('hide', !giftText() || days() < 3);
+    const s = new Date($('date').value + 'T' + $('time').value);
+    $('endAt').textContent = isNaN(s) ? '—' : fmt(new Date(+s + days() * 864e5));
+  }
+
+  const now = new Date();
+  const today = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  $('date').min = today; $('date').value = today;
+  ['qty', 'date', 'time'].forEach(id => $(id).oninput = update);
+  let pay = 'transfer';
+  const goText = () => pay === 'cash' ? 'Забронировать — оплачу наличными' : 'Я оплатил — забронировать';
+  const updateBtn = () => { $('go').disabled = pay === 'transfer' && !$('paid').checked; };
+  function setPay(p) {
+    pay = p;
+    document.querySelectorAll('.pay-way').forEach(b => b.classList.toggle('on', b.dataset.pay === p));
+    $('payTransfer').classList.toggle('hide', p !== 'transfer');
+    $('paidRow').classList.toggle('hide', p !== 'transfer');
+    $('payCash').classList.toggle('hide', p !== 'cash');
+    $('go').textContent = goText();
+    updateBtn();
+  }
+  document.querySelectorAll('.pay-way').forEach(b => b.onclick = () => setPay(b.dataset.pay));
+  $('paid').onchange = updateBtn;
+
+  const passports = { 1: null, 2: null };
+  function shrink(file) {
+    return new Promise((res, rej) => {
+      const fr = new FileReader();
+      fr.onerror = rej;
+      fr.onload = () => {
+        const img = new Image();
+        img.onerror = rej;
+        img.onload = () => {
+          const k = Math.min(1, 1600 / Math.max(img.width, img.height));
+          const c = document.createElement('canvas');
+          c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+          c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+          res(c.toDataURL('image/jpeg', 0.85));
+        };
+        img.src = fr.result;
+      };
+      fr.readAsDataURL(file);
+    });
+  }
+  const SHOT_NAMES = { 1: 'Главная', 2: 'Прописка' };
+  function renderPass(msg) {
+    const n = (passports[1] ? 1 : 0) + (passports[2] ? 1 : 0);
+    $('passBox').classList.toggle('done', n === 2);
+    $('passShots').classList.toggle('hide', n === 0);
+    $('passShots').innerHTML = [1, 2].map(k => `<span class="shot">${passports[k]
+      ? `<img src="${passports[k]}" alt=""><button type="button" class="del" data-k="${k}" aria-label="Убрать">✕</button>`
+      : `<span class="ph-t">＋ ${k === 2 ? 'страница с пропиской' : 'главная страница'}</span>`}<b>${SHOT_NAMES[k]}</b></span>`).join('');
+    $('passShots').querySelectorAll('.del').forEach(b => b.onclick = e => {
+      e.preventDefault(); e.stopPropagation(); passports[b.dataset.k] = null; renderPass();
+    });
+    $('passText').innerHTML = msg || (n === 0
+      ? '📷 Добавить 2 фото паспорта<br><small class="muted">главная страница и прописка — в галерее можно отметить сразу оба</small>'
+      : n === 1 ? `📷 Добавьте фото: ${passports[1] ? 'страница с пропиской' : 'главная страница'}`
+      : '✅ Оба фото добавлены <small class="muted">— нажмите, чтобы заменить</small>');
+  }
+  $('passBoth').onchange = async () => {
+    let files = [...$('passBoth').files].slice(0, 2);
+    $('passBoth').value = '';
+    if (!files.length) return;
+    if (passports[1] && passports[2]) { passports[1] = passports[2] = null; }
+    const slots = files.length === 2 ? [1, 2] : [passports[1] ? 2 : 1];
+    renderPass('Обрабатываем фото…');
+    try {
+      const imgs = await Promise.all(files.map(shrink));
+      slots.forEach((k, i) => { passports[k] = imgs[i]; });
+      renderPass();
+    } catch (e) {
+      renderPass('Не удалось открыть фото. Попробуйте другое.');
+    }
+  };
+
+  $('go').onclick = async () => {
+    const f = { id: selected.id, name: $('name').value.trim(), phone: $('phone').value.trim(),
+      date: $('date').value, time: $('time').value, days: parseInt($('qty').value, 10),
+      passport: passports[1], passport2: passports[2], pay: pay };
+    const err = m => { $('err').textContent = m; $('err').classList.remove('hide'); };
+    if (f.name.length < 2) return err('Укажите Ф.И.О.');
+    if (f.phone.replace(/\D/g, '').length < 10) return err('Укажите телефон полностью.');
+    if (!f.date || !f.time) return err('Укажите дату и время.');
+    if (!(f.days >= 1 && f.days <= 30)) return err('Срок — от 1 до 30 суток.');
+    if (!f.passport) return err('Прикрепите фото главной страницы паспорта.');
+    if (!f.passport2) return err('Прикрепите фото страницы с пропиской.');
+
+    $('go').disabled = true; $('go').textContent = 'Бронируем…'; $('err').classList.add('hide');
+    try {
+      const r = await call('book', f);
+      $('dNum').textContent = r.id;
+      $('dText').textContent = `${r.name}: с ${r.start} до ${r.end} (${r.days} ${daysWord(r.days)}). Сумма: ${rub(r.sum)}.`;
+      if (pay === 'cash') {
+        $('dNote').textContent = 'Оплата наличными при получении. Мы позвоним, чтобы подтвердить бронь.';
+        $('dReceipt').innerHTML = '';
+      } else {
+        $('dNote').textContent = 'Мы проверим поступление оплаты и свяжемся с вами по телефону.';
+        $('dReceipt').innerHTML = receiptButton(data.settings.receipt, 'Прислать чек');
+      }
+      $('main').classList.add('hide'); $('done').classList.remove('hide');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (e) {
+      err(String(e.message || e).replace(/^(Error|Exception):\s*/, ''));
+      $('go').disabled = false; $('go').textContent = goText();
+      load(true);
+    }
+  };
+
+  load();
+</script>
+</body>
+</html>
