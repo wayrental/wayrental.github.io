@@ -88,6 +88,27 @@
   .ab li::before { content: ''; position: absolute; left: 3px; top: .62em; width: 6px; height: 6px; border-radius: 50%;
     background: var(--accent2); }
   @media (max-width: 720px) { .about { grid-template-columns: 1fr; } }
+  /* «О прокате» — цветные карточки с иконкой и галочками */
+  .sec-sub { margin: -6px 0 14px; color: var(--muted); font-size: 14px; }
+  .about { gap: 12px; }
+  .ab { --c: #22d3ee; --cb: rgba(34,211,238,.12); position: relative; overflow: hidden; padding: 18px 18px 20px; border-radius: 20px;
+    border: 1px solid rgba(255,255,255,.07); transition: transform .2s, border-color .2s; }
+  .about .ab { background: radial-gradient(260px 140px at 0% 0%, var(--cb), transparent 70%),
+                linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.015)), var(--card); }
+  .about .ab:hover { border-color: var(--c); }
+  .ab::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 3px;
+    background: linear-gradient(90deg, var(--c), transparent); }
+  .ab:hover { transform: translateY(-2px); border-color: var(--c); }
+  .ab.c1 { --c: #22c55e; --cb: rgba(34,197,94,.12); }
+  .ab.c2 { --c: #a78bfa; --cb: rgba(139,92,246,.16); }
+  .ab-ico { width: 48px; height: 48px; border-radius: 15px; display: inline-flex; align-items: center; justify-content: center;
+    font-size: 24px; background: var(--cb); border: 1px solid rgba(255,255,255,.08); }
+  .ab h3 { margin: 12px 0 10px; font-size: 17px; font-weight: 800; }
+  .ab p { color: #d6d1e2; font-size: 14px; line-height: 1.6; }
+  .ab li { padding-left: 28px; font-size: 14px; line-height: 1.5; }
+  .ab li + li { margin-top: 8px; }
+  .ab li::before { content: '✓'; left: 0; top: 1px; width: 19px; height: 19px; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 900; color: var(--c); background: var(--cb); border-radius: 50%; }
   .cat-h { display: flex; align-items: center; gap: 10px; margin: 26px 0 12px; }
   .cat-h h2 { margin: 0; }
   .cat-h span { font-size: 12px; color: var(--muted); background: var(--card); border: 1px solid var(--line);
@@ -540,6 +561,7 @@
 
     <section id="about" class="hide">
       <div class="cat-h"><h2>О прокате</h2></div>
+      <p class="sec-sub">Всё, что важно знать до аренды</p>
       <div class="about" id="aboutList"></div>
     </section>
 
@@ -830,8 +852,11 @@
   function renderAbout() {
     const blocks = String(data.about || '').replace(/\r/g, '').split(/\n\s*\n/).map(b => b.split('\n').map(l => l.trim()).filter(Boolean)).filter(b => b.length);
     $('about').classList.toggle('hide', !blocks.length);
-    $('aboutList').innerHTML = blocks.map(b => {
-      const [title, ...rest] = b;
+    $('aboutList').innerHTML = blocks.map((b, n) => {
+      const [title0, ...rest] = b;
+      const em = /^(\p{Extended_Pictographic}[️‍\p{Extended_Pictographic}]*)\s*/u.exec(title0);
+      const icon = em ? em[1] : '✦';
+      const title = em ? title0.slice(em[0].length) : title0;
       let html = '', list = [];
       const flush = () => { if (list.length) { html += '<ul>' + list.map(x => `<li>${esc(x)}</li>`).join('') + '</ul>'; list = []; } };
       rest.forEach(l => {
@@ -839,7 +864,7 @@
         else { flush(); html += `<p>${esc(l)}</p>`; }
       });
       flush();
-      return `<div class="ab"><h3>${esc(title.replace(/:\s*$/, ''))}</h3>${html}</div>`;
+      return `<div class="ab c${n % 3}"><span class="ab-ico">${esc(icon)}</span><h3>${esc(title.replace(/:\s*$/, ''))}</h3>${html}</div>`;
     }).join('');
   }
 
