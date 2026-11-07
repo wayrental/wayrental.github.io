@@ -17,7 +17,20 @@ const BOOKING_STATUS = 'Проверить оплату';         // бронь 
 const CASH_STATUS = 'Наличные — подтвердить';      // бронь с оплатой наличными при получении
 const CONFIRMED_STATUS = 'Подтверждена';           // админ подтвердил бронь
 const CANCELED_STATUS = 'Отменена';                // админ отменил бронь — шлем снова свободен
+const ISSUED_STATUS = 'Выдан';                     // админ выдал устройство клиенту
+const RETURNED_STATUS = 'Возвращён';               // клиент вернул устройство — оно снова свободно
 const DATE_FORMAT = 'dd.MM.yyyy HH:mm';
+
+// Новые частые вопросы. setup допишет их в конец ячейки «Сайт: Частые вопросы», если их там ещё нет.
+const FAQ_EXTRA =
+  'Можно ли играть вместе, если взять 2 шлема?\n' +
+  'Да! Можно играть вместе онлайн — в кооперативные и командные игры. Такие игры отмечены значком «Вместе» в разделе «Игры».\n' +
+  '\n' +
+  'Для чего нужно фото паспорта?\n' +
+  'Это условие аренды. Фото конфиденциально — его не видит никто, кроме владельца проката.\n' +
+  '\n' +
+  'Можно ли играть без интернета?\n' +
+  'Да. Большая часть игр на шлеме работает без интернета. Интернет нужен только для онлайн-игр и видео.';
 
 // Текст подарка на плитке «3 суток» (по умолчанию)
 const GIFT_TEXT = '🎁 Доставка от 3х суток бесплатно';
@@ -101,7 +114,8 @@ const DEFAULT_SETTINGS = [
     'Да, шлем можно подключить к ПК и играть в игры из Steam.\n' +
     '\n' +
     'Можно ли смотреть YouTube и фильмы онлайн — в том числе вместе?\n' +
-    'Да, можно.'],
+    'Да, можно.\n' +
+    '\n' + FAQ_EXTRA],
   // Отзывы: ссылка на актуальное с отзывами в Instagram (актуальное → ⋯ → Копировать ссылку). Пусто — раздела не будет.
   ['Сайт: отзывы в Instagram (ссылка)', REVIEWS_LINK],
   ['Сайт: Telegram токен бота', ''],
@@ -111,6 +125,8 @@ const DEFAULT_SETTINGS = [
   ['Сайт: оплата наличными', 'да'],
   // Сколько броней за наличные может одновременно ждать вашего звонка. Больше — сайт попросит оплатить переводом.
   ['Сайт: наличные — максимум неподтверждённых броней', 2],
+  // Какой статус ставить шлему в листе «Шлемы», когда в админке нажали «Выдан»
+  ['Сайт: статус шлема при выдаче', 'В аренде'],
 ];
 
 // Игры для листа «Игры» — добавятся, только если листа ещё нет. Дальше меняйте их прямо в таблице.
@@ -263,6 +279,13 @@ function setup() {
   // Строка отзывов добавлена раньше пустой — впишем ссылку на актуальное
   const rv = have.indexOf('Сайт: отзывы в Instagram (ссылка)');
   if (rv >= 0 && String(vals[rv][1]).trim() === '') sh.getRange(rv + 1, 2).setValue(REVIEWS_LINK);
+  // Новые частые вопросы дописываем в конец (ваши вопросы и правки не трогаем; уже добавленные — не повторяем)
+  const fq = have.indexOf('Сайт: Частые вопросы');
+  if (fq >= 0) {
+    let cur = String(vals[fq][1] || '').replace(/\r/g, '').trim();
+    const add = FAQ_EXTRA.split(/\n\s*\n/).filter(b => cur.indexOf(b.split('\n')[0].trim()) < 0);
+    if (add.length) sh.getRange(fq + 1, 2).setValue((cur ? cur + '\n\n' : '') + add.join('\n\n'));
+  }
   // Старый текст подарка меняем на новый (свой текст, если вы его вписали, не трогаем)
   const gf = have.indexOf('Сайт: подарок от 3 суток');
   if (gf >= 0 && String(vals[gf][1]).trim() === '🎁 доставка бесплатно') sh.getRange(gf + 1, 2).setValue(GIFT_TEXT);
@@ -418,7 +441,7 @@ function imgUrl_(u) {
   u = String(u || '').trim();
   if (!u) return '';
   const m = /drive\.google\.com\/.*(?:\/d\/|[?&]id=)([\w-]{20,})/.exec(u);
-  if (m) return 'https://drive.google.com/thumbnail?id=' + m[1] + '&sz=w800';
+  if (m) return 'https://drive.google.com/thumbnail?id=' + m[1] + '&sz=w600'; // 600px хватает и для чётких экранов, грузится быстрее
   return /^https:\/\//.test(u) ? u : '';
 }
 
@@ -427,7 +450,7 @@ function imgUrl_(u) {
 /** Запросы со страницы админа: {key, cmd: 'list' | 'confirm' | 'cancel', id}. */
 function admin_(arg) {
   checkAdminKey_(arg.key);
-  if (arg.cmd === 'confirm' || arg.cmd === 'cancel') adminSet_(String(arg.id || ''), arg.cmd);
+  if (['confirm', 'cancel', 'issue', 'return'].indexOf(arg.cmd) >= 0) adminSet_(String(arg.id || ''), arg.cmd);
   else if (arg.cmd !== 'list') throw new Error('Неизвестная команда.');
   return { bookings: adminList_() };
 }
@@ -461,7 +484,7 @@ function adminList_() {
   for (let i = 1; i < vals.length; i++) {
     const r = vals[i];
     const status = String(r[6]).trim();
-    if (!r[0] || [BOOKING_STATUS, CASH_STATUS, CONFIRMED_STATUS].indexOf(status) < 0) continue;
+    if (!r[0] || [BOOKING_STATUS, CASH_STATUS, CONFIRMED_STATUS, ISSUED_STATUS].indexOf(status) < 0) continue;
     if (status === CONFIRMED_STATUS && r[5] instanceof Date && r[5].getTime() < now - 864e5) continue;
     const rt = rich[i] && rich[i][7];
     const passports = rt ? rt.getRuns().map(x => ({ t: x.getText().trim(), url: x.getLinkUrl() })).filter(x => x.url) : [];
@@ -485,16 +508,34 @@ function adminSet_(id, cmd) {
     if (i < 0) throw new Error('Бронь ' + id + ' не найдена.');
     const status = String(rows[i][6]).trim();
     if (status === CANCELED_STATUS) throw new Error('Эта бронь уже отменена.');
+    if (status === RETURNED_STATUS) throw new Error('По этой брони устройство уже возвращено.');
+    // Шлемы: C Статус, D Клиент, E Телефон, F Дата возврата, G ID брони
+    const vr = ss.getSheetByName(SHEET_VR);
+    const v = vr.getDataRange().getValues();
+    const j = v.findIndex((r, n) => n > 0 && String(r[6]) === id);
+    const vrStatus = j >= 0 ? String(v[j][2]).trim() : '';
+    // Если в столбце «Статус» есть выпадающий список без такого значения — объясняем, что поправить
+    const setVrStatus = val => {
+      try { vr.getRange(j + 1, 3).setValue(val); }
+      catch (e) { throw new Error('Таблица не приняла статус «' + val + '» в листе «Шлемы». Добавьте его в список статусов ' +
+        'или поменяйте строку «Сайт: статус шлема при выдаче» в «Настройках».'); }
+    };
     if (cmd === 'confirm') {
-      if (status === CONFIRMED_STATUS) return;
+      if (status === CONFIRMED_STATUS || status === ISSUED_STATUS) return;
       bk.getRange(i + 1, 7).setValue(CONFIRMED_STATUS);
+    } else if (cmd === 'issue') {
+      if (status === ISSUED_STATUS) return;
+      const rented = String(settings_()['Сайт: статус шлема при выдаче'] || 'В аренде').trim() || 'В аренде';
+      if (j >= 0 && vrStatus === BOOKED) setVrStatus(rented);
+      bk.getRange(i + 1, 7).setValue(ISSUED_STATUS);
+    } else if (cmd === 'return') {
+      if (status !== ISSUED_STATUS) throw new Error('Сначала отметьте «Выдан».');
+      if (j >= 0) vr.getRange(j + 1, 3, 1, 5).setValues([[FREE, '', '', '', '']]);
+      bk.getRange(i + 1, 7).setValue(RETURNED_STATUS);
     } else {
+      if (status === ISSUED_STATUS) throw new Error('Устройство уже выдано — когда вернут, нажмите «Возвращён».');
       bk.getRange(i + 1, 7).setValue(CANCELED_STATUS);
-      // Шлемы: C Статус, D Клиент, E Телефон, F Дата возврата, G ID брони
-      const vr = ss.getSheetByName(SHEET_VR);
-      const v = vr.getDataRange().getValues();
-      const j = v.findIndex((r, n) => n > 0 && String(r[6]) === id);
-      if (j >= 0 && String(v[j][2]).trim() === BOOKED) vr.getRange(j + 1, 3, 1, 5).setValues([[FREE, '', '', '', '']]);
+      if (j >= 0 && vrStatus === BOOKED) vr.getRange(j + 1, 3, 1, 5).setValues([[FREE, '', '', '', '']]);
     }
     SpreadsheetApp.flush();
   } finally {
@@ -602,12 +643,29 @@ function savePassport_(s, photo, id, name) {
 /** Текст, начинающийся с = + - @, таблица считает формулой — делаем его обычным текстом. */
 function safe_(v) { return /^[=+\-@]/.test(v) ? "'" + v : v; }
 
+/** Сообщение в Telegram. Можно несколько получателей: chat_id через запятую. */
 function notify_(s, text) {
-  try {
-    const token = String(s['Сайт: Telegram токен бота'] || '').trim();
-    const chat = String(s['Сайт: Telegram chat_id'] || '').trim();
-    if (!token || !chat) return;
-    UrlFetchApp.fetch('https://api.telegram.org/bot' + token + '/sendMessage',
+  try { tgSend_(s, text); } catch (e) { /* уведомление необязательно — бронь всё равно сохранена */ }
+}
+
+function tgSend_(s, text) {
+  const token = String(s['Сайт: Telegram токен бота'] || '').trim();
+  const chats = String(s['Сайт: Telegram chat_id'] || '').split(/[,;\s]+/).filter(Boolean);
+  if (!token || !chats.length) throw new Error('Заполните в «Настройках» строки «Сайт: Telegram токен бота» и «Сайт: Telegram chat_id».');
+  chats.forEach(chat => {
+    const r = UrlFetchApp.fetch('https://api.telegram.org/bot' + token + '/sendMessage',
       { method: 'post', payload: { chat_id: chat, text: text }, muteHttpExceptions: true });
-  } catch (e) { /* уведомление необязательно */ }
+    if (r.getResponseCode() !== 200) {
+      let why = '';
+      try { why = JSON.parse(r.getContentText()).description || ''; } catch (e) {}
+      throw new Error('Telegram не принял сообщение для ' + chat + ': ' + why +
+        (/chat not found/i.test(why) ? ' — сначала напишите своему боту любое сообщение (/start).' : '') +
+        (/Unauthorized/i.test(why) || /^Not Found$/i.test(why) ? ' — проверьте токен бота.' : ''));
+    }
+  });
+}
+
+/** Запустите эту функцию в редакторе (▶ Выполнить), чтобы проверить уведомления: придёт тестовое сообщение. */
+function testTelegram() {
+  tgSend_(settings_(), '✅ WAY_VR: уведомления работают! Сюда будут приходить новые брони с сайта.');
 }

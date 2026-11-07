@@ -77,6 +77,10 @@
   .act { height: 44px; border-radius: 12px; border: 0; font-weight: 800; font-size: 15px; cursor: pointer; }
   .act.ok { color: #fff; background: linear-gradient(90deg, #16a34a, #0d9488); }
   .act.no { color: var(--err); background: rgba(248,113,113,.10); border: 1px solid rgba(248,113,113,.35); }
+  .act.give { color: #fff; background: linear-gradient(90deg, var(--accent), #6d28d9); }
+  .act.ret { color: #fff; background: linear-gradient(90deg, #0891b2, #0d9488); }
+  .chip.out { color: var(--accent2); background: rgba(34,211,238,.12); }
+  .tabs button { font-size: 13px; padding: 0 4px; }
   .act:disabled { opacity: .5; }
   .acts.one { grid-template-columns: 1fr; }
 
@@ -108,8 +112,9 @@
   <!-- Брони -->
   <div id="app" class="hide">
     <div class="tabs">
-      <button type="button" data-tab="wait" class="on">Ждут решения<b id="nWait"></b></button>
+      <button type="button" data-tab="wait" class="on">Ждут<b id="nWait"></b></button>
       <button type="button" data-tab="ok">Подтверждены<b id="nOk"></b></button>
+      <button type="button" data-tab="out">Выданы<b id="nOut"></b></button>
     </div>
     <div id="list"><div class="loading">Загружаем брони…</div></div>
   </div>
@@ -172,16 +177,36 @@
     } finally { busy = false; }
   }
 
-  const waiting = b => b.status !== 'Подтверждена';
+  // Кнопки под статус: новая — подтвердить/отменить; подтверждена — выдать/отменить; выдан — возвращён
+  const btn = (cls, cmd, id, text) => `<button class="act ${cls}" data-cmd="${cmd}" data-id="${esc(id)}">${text}</button>`;
+  function actions(b) {
+    const g = group(b);
+    if (g === 'out') return btn('ret', 'return', b.id, '↩️ Возвращён');
+    if (g === 'ok') return btn('give', 'issue', b.id, '📦 Выдан') + btn('no', 'cancel', b.id, '❌ Отменить');
+    return btn('ok', 'confirm', b.id, '✅ Подтвердить') + btn('no', 'cancel', b.id, '❌ Отменить');
+  }
+  const ASK = {
+    cancel: b => `Отменить бронь ${b.id}?\n${b.deviceName} — ${b.name}\n\nУстройство снова станет «Свободен».`,
+    issue: b => `Отметить, что ${b.deviceName} выдан клиенту ${b.name}?`,
+    return: b => `${b.deviceName} вернули?\n\nУстройство снова станет «Свободен».`,
+  };
+  const DONE = { confirm: 'Бронь подтверждена', cancel: 'Бронь отменена, устройство свободно', issue: 'Отмечено: выдан', return: 'Отмечено: возвращён, устройство свободно' };
+  const BUSY = { confirm: 'Подтверждаем…', cancel: 'Отменяем…', issue: 'Отмечаем…', return: 'Отмечаем…' };
+
+  // Вкладки: «Ждут» (новые), «Подтверждены», «Выданы» (устройство у клиента)
+  const group = b => b.status === 'Выдан' ? 'out' : b.status === 'Подтверждена' ? 'ok' : 'wait';
+  const EMPTY = { wait: 'Новых броней нет 👌', ok: 'Подтверждённых броней нет', out: 'Сейчас ничего не выдано' };
   function render() {
-    const w = items.filter(waiting), ok = items.filter(b => !waiting(b));
-    $('nWait').textContent = w.length ? w.length : ''; $('nOk').textContent = ok.length ? ok.length : '';
+    const by = { wait: [], ok: [], out: [] };
+    items.forEach(b => by[group(b)].push(b));
+    $('nWait').textContent = by.wait.length || ''; $('nOk').textContent = by.ok.length || ''; $('nOut').textContent = by.out.length || '';
     document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
-    const list = tab === 'wait' ? w : ok;
-    if (!list.length) { $('list').innerHTML = `<div class="empty">${tab === 'wait' ? 'Новых броней нет 👌' : 'Подтверждённых броней нет'}</div>`; return; }
+    const list = by[tab];
+    if (!list.length) { $('list').innerHTML = `<div class="empty">${EMPTY[tab]}</div>`; return; }
     $('list').innerHTML = list.map(b => {
       const cash = /налич/i.test(b.pay) || b.status.indexOf('Наличные') === 0;
-      const chip = b.status === 'Подтверждена' ? '<span class="chip confirmed">Подтверждена</span>'
+      const chip = b.status === 'Выдан' ? '<span class="chip out">📦 Выдан</span>'
+        : b.status === 'Подтверждена' ? '<span class="chip confirmed">Подтверждена</span>'
         : cash ? '<span class="chip cash">💵 Наличные</span>' : '<span class="chip transfer">💳 Проверить перевод</span>';
       const digits = String(b.phone).replace(/\D/g, '').replace(/^8(?=\d{10}$)/, '7');
       const docs = (b.passports || []).map(p => `<a class="lnk" href="${esc(p.url)}" target="_blank" rel="noopener">📄 ${esc(p.t || 'Паспорт')}</a>`).join('');
@@ -197,19 +222,16 @@
           <a class="lnk wa" href="https://wa.me/${esc(digits)}" target="_blank" rel="noopener">WhatsApp</a>
           ${docs}
         </div>
-        <div class="acts ${b.status === 'Подтверждена' ? 'one' : ''}">
-          ${b.status === 'Подтверждена' ? '' : `<button class="act ok" data-cmd="confirm" data-id="${esc(b.id)}">✅ Подтвердить</button>`}
-          <button class="act no" data-cmd="cancel" data-id="${esc(b.id)}">❌ Отменить</button>
-        </div>
+        <div class="acts ${group(b) === 'out' ? 'one' : ''}">${actions(b)}</div>
       </div>`;
     }).join('');
-    $('list').querySelectorAll('.act').forEach(btn => btn.onclick = async () => {
-      const id = btn.dataset.id, cmd = btn.dataset.cmd;
+    $('list').querySelectorAll('.act').forEach(el => el.onclick = async () => {
+      const id = el.dataset.id, cmd = el.dataset.cmd;
       const b = items.find(x => x.id === id);
-      if (cmd === 'cancel' && !confirm(`Отменить бронь ${id}?\n${b.deviceName} — ${b.name}\n\nУстройство снова станет «Свободен».`)) return;
+      if (ASK[cmd] && !confirm(ASK[cmd](b))) return;
       $('list').querySelectorAll('.act').forEach(x => x.disabled = true);
-      btn.textContent = cmd === 'cancel' ? 'Отменяем…' : 'Подтверждаем…';
-      if (await load(cmd, id)) toast(cmd === 'cancel' ? 'Бронь отменена, устройство свободно' : 'Бронь подтверждена');
+      el.textContent = BUSY[cmd];
+      if (await load(cmd, id)) toast(DONE[cmd]);
       else render();
     });
   }
