@@ -295,7 +295,12 @@
   header { padding: 28px 0 6px; }
   .eyebrow { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 99px; font-size: 12px;
     font-weight: 700; letter-spacing: .3px; color: #c4b5fd; background: rgba(139,92,246,.12); border: 1px solid rgba(139,92,246,.3); }
-  h1 { font-size: 40px; margin-top: 14px; font-weight: 700; }
+  h1 { font-size: 30px; margin-top: 12px; font-weight: 700; }
+  /* Шаги 1-2-3 — компактнее */
+  .steps { gap: 6px; margin: 16px 0 4px; }
+  .step { padding: 8px 6px; font-size: 11px; border-radius: 12px; }
+  .step i { width: 20px; height: 20px; font-size: 11px; margin-bottom: 4px; }
+  .step b { font-size: 12px; }
   h1 span { background: linear-gradient(90deg, #a78bfa, var(--accent2)); -webkit-background-clip: text; background-clip: text; }
   .lead { font-size: 16px; max-width: 520px; margin-top: 10px; }
   .hero-cta { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 18px; }
@@ -322,6 +327,21 @@
   .rv-btn { position: relative; flex: none; display: inline-flex; align-items: center; gap: 6px; height: 46px; padding: 0 18px;
     border-radius: 14px; color: #fff; font-weight: 700; font-size: 15px; text-decoration: none;
     background: linear-gradient(90deg, #dd2a7b, #8134af); box-shadow: 0 10px 26px rgba(221,42,123,.3); }
+
+  /* Раздел «Игры» — отдельный экран; на главной его нет */
+  body:not(.games-view) #games { display: none !important; }
+  body.games-view header, body.games-view .steps, body.games-view #cats, body.games-view #form,
+  body.games-view #about, body.games-view #faq, body.games-view #reviews, body.games-view #done { display: none !important; }
+  body.games-view #games { margin-top: 18px; }
+  .back { display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 14px; border-radius: 12px; cursor: pointer;
+    border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.05); color: var(--text); font: inherit; font-weight: 700; font-size: 14px; }
+
+  /* Плитки тарифов — нажимаются, сразу ведут в оформление */
+  .tariffs.pick .tariff { cursor: pointer; transition: border-color .2s, transform .2s, box-shadow .2s; }
+  .tariffs.pick .tariff:hover { transform: translateY(-2px); border-color: rgba(139,92,246,.55);
+    box-shadow: 0 8px 24px rgba(0,0,0,.35), 0 0 0 1px rgba(139,92,246,.25); }
+  .tariffs.pick .tariff:active { transform: scale(.98); }
+  .tariffs.pick .tariff:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   /* Подарок от 3 суток */
   .tariff.gifted { position: relative; border-color: rgba(251,191,36,.45);
@@ -383,7 +403,9 @@
   }
   @media (max-width: 640px) {
     header { padding-top: 18px; }
-    h1 { font-size: 30px; }
+    h1 { font-size: 24px; }
+    .step { padding: 7px 4px; font-size: 10px; }
+    .step b { font-size: 11px; }
     .lead { font-size: 15px; }
     .hero-cta { gap: 8px; }
     .hero-cta > a { flex: 1 1 calc(50% - 8px); justify-content: center; padding: 0 10px; font-size: 14px; gap: 6px; }
@@ -398,7 +420,7 @@
 <div class="topbar">
   <button type="button" class="ic-btn" id="menuBtn" aria-label="Открыть меню">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg></button>
-  <a href="#top" class="brand-sm" id="brandSm">WAY_VR</a>
+  <a href="#top" class="brand-sm hide" id="brandSm">WAY_VR</a>
   <a class="ic-btn wa hide" id="waBar" target="_blank" rel="noopener" aria-label="Написать в WhatsApp"></a>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -500,11 +522,6 @@
       <div class="about" id="aboutList"></div>
     </section>
 
-    <section id="faq" class="hide">
-      <div class="cat-h"><h2>Частые вопросы</h2></div>
-      <div class="faq" id="faqList"></div>
-    </section>
-
     <section id="reviews" class="hide">
       <div class="cat-h"><h2>Отзывы клиентов</h2></div>
       <div class="rv-card">
@@ -515,7 +532,14 @@
       </div>
     </section>
 
+    <section id="faq" class="hide">
+      <div class="cat-h"><h2>Частые вопросы</h2></div>
+      <div class="faq" id="faqList"></div>
+    </section>
+
+    <!-- Отдельный раздел «Игры»: открывается по кнопке «Игры» или из меню, на главной не показывается -->
     <section id="games" class="hide">
+      <button type="button" class="back" id="gamesBack">← На главную</button>
       <div class="cat-h"><h2 id="gamesT">Игры на VR-шлеме</h2><span id="gamesN"></span></div>
       <div class="seg" id="gameSort">
         <button type="button" data-sort="az" class="on">А–Я</button>
@@ -594,7 +618,7 @@
       ['Job Simulator', 'Юмор / для всей семьи', '6+', 'Весёлая игра про «работу» в мире роботов. Отличный первый опыт VR.', 'O2tvoeJxLSU'],
       ['The Walking Dead: Saints & Sinners', 'Хоррор / выживание', '18+', 'Выживайте в затопленном Новом Орлеане среди зомби.', 'vxf5dFQy31c'],
     ].map(([title, genre, age, desc, video]) => ({ title, genre, age, desc, video, photo: 'https:\/\/i.ytimg.com/vi/' + video + '/hqdefault.jpg' })),
-    settings: { title: 'WAY_VR', cash: true, gift: '🎁 доставка бесплатно', whatsapp: '', receiver: 'Изнаур Вахаевич М.', bank: 'Сбербанк | Т-Банк', card: '2202000000000000',
+    settings: { title: 'WAY_VR', cash: true, gift: '🎁 Доставка от 3х суток бесплатно', whatsapp: '', receiver: 'Изнаур Вахаевич М.', bank: 'Сбербанк | Т-Банк', card: '2202000000000000',
       cards: [{ key: 'sber', bank: 'Сбербанк', number: '5469980473873376' }, { key: 'tbank', bank: 'Т-Банк', number: '5536914119978736' }],
       sbp: '7(938)910-04-44', receipt: 'https:\/\/wa.me/79000000000' }
   };
@@ -710,8 +734,16 @@
 
   const emojiFor = c => c.key === 'VR' ? '🥽' : '🕶️';
   const giftText = () => String((data && data.settings && data.settings.gift) || '').trim();
-  const tariffsHtml = p => [['1 сутки', rub(p.p1)], ['2 суток', rub(p.p2)], ['3 суток', rub(p.p3), giftText()], ['доп. сутки', '+' + rub(p.extra)]]
-    .map(([t, v, gift]) => `<div class="tariff${gift ? ' gifted' : ''}"><span>${t}</span><b>${v}</b>${gift ? `<small class="gift">${esc(gift)}</small>` : ''}</div>`).join('');
+  const tariffsHtml = p => [['1 сутки', rub(p.p1), '', 1], ['2 суток', rub(p.p2), '', 2], ['3 суток', rub(p.p3), giftText(), 3], ['доп. сутки', '+' + rub(p.extra), '', 4]]
+    .map(([t, v, gift, d]) => `<div class="tariff${gift ? ' gifted' : ''}" data-days="${d}"><span>${t}</span><b>${v}</b>${gift ? `<small class="gift">${esc(gift)}</small>` : ''}</div>`).join('');
+
+  function pickTariff(catKey, d) {
+    const c = data.cats.find(x => x.key === catKey);
+    const it = c && c.items.find(i => i.free);
+    if (!it) { const s = $('cat-' + catKey); if (s) s.scrollIntoView({ behavior: 'smooth' }); return; }
+    $('qty').value = d;
+    select(it.id);
+  }
   const photoHtml = (url, alt) => url
     ? `<img src="${esc(url)}" alt="${esc(alt)}" loading="lazy" onerror="this.parentNode.classList.remove('has-img');this.remove()">` : '';
   const textHtml = t => esc(t).replace(/\n/g, '<br>');
@@ -726,7 +758,7 @@
       const free = items.filter(i => i.free).length;
       return `<section class="cat" id="cat-${esc(c.key)}">
         <div class="cat-h"><h2>${esc(c.title)}</h2><span>свободно ${free} из ${items.length}</span></div>
-        <div class="tariffs">${tariffsHtml(c.prices)}</div>
+        <div class="tariffs pick" data-cat="${esc(c.key)}">${tariffsHtml(c.prices)}</div>
         <div class="grid">${free ? '' : '<div class="skeleton">Сейчас всё занято. Загляните позже.</div>'}${items.map(it => `
           <button class="item ${selected && selected.id === it.id ? 'sel' : ''}" data-id="${esc(it.id)}" ${it.free ? '' : 'disabled'}>
             <div class="ph ${it.photo ? 'has-img' : ''}">${photoHtml(it.photo, it.name)}<span class="emoji">${emojiFor(c)}</span><span class="badge ${it.free ? 'free' : 'busy'}">${it.free ? 'Свободно' : 'Занято'}</span></div>
@@ -738,6 +770,11 @@
       </section>`;
     }).join('');
     $('cats').querySelectorAll('.item:not(:disabled)').forEach(b => b.onclick = () => select(b.dataset.id));
+    $('cats').querySelectorAll('.tariffs.pick .tariff').forEach(t => {
+      t.setAttribute('role', 'button'); t.tabIndex = 0;
+      t.onclick = () => pickTariff(t.parentNode.dataset.cat, +t.dataset.days);
+      t.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); t.onclick(); } };
+    });
 
     const cards = s.cards || [];
     const lines = [['Получатель', esc(s.receiver || ''), null]]
@@ -814,7 +851,11 @@
     $('nav').innerHTML = html;
     $('nav').querySelectorAll('[data-go]').forEach(a => a.onclick = e => { e.preventDefault(); closeMenu(); goTo(a.dataset.go); });
   }
-  function goTo(sel) { const el = document.querySelector(sel); if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth' }), 120); }
+  function goTo(sel) {
+    if (sel === '#games') { openGames(); return; }
+    goMain();
+    const el = document.querySelector(sel); if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth' }), 120);
+  }
   function openMenu() { document.body.classList.add('menu-open', 'lock'); }
   function closeMenu() { document.body.classList.remove('menu-open'); if ($('modal').classList.contains('hide')) document.body.classList.remove('lock'); }
   $('menuBtn').onclick = openMenu;
@@ -902,7 +943,22 @@
     $('modal').classList.add('hide');
     document.body.classList.remove('lock');
   }
-  $('toGames').onclick = e => { e.preventDefault(); $('games').scrollIntoView({ behavior: 'smooth' }); };
+  function route() {
+    const g = location.hash === '#games';
+    const was = document.body.classList.contains('games-view');
+    document.body.classList.toggle('games-view', g);
+    if (g !== was) window.scrollTo(0, 0);
+  }
+  function openGames() { if (location.hash !== '#games') location.hash = 'games'; else route(); }
+  function goMain() {
+    if (location.hash === '#games') history.pushState(null, '', location.pathname + location.search);
+    route();
+  }
+  window.addEventListener('hashchange', route);
+  window.addEventListener('popstate', route);
+  $('toGames').onclick = e => { e.preventDefault(); openGames(); };
+  $('gamesBack').onclick = goMain;
+  route();
   $('mClose').onclick = closeGame;
   $('modal').onclick = e => { if (e.target === $('modal')) closeGame(); };
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('modal').classList.contains('hide')) closeGame(); });
