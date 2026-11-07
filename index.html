@@ -363,6 +363,9 @@
   .back { display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 14px; border-radius: 12px; cursor: pointer;
     border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.05); color: var(--text); font: inherit; font-weight: 700; font-size: 14px; }
 
+  .info-more { display: none; }
+  #form { scroll-margin-top: 82px; }
+
   /* Для новичков: явная кнопка на карточке и подсказка над списком */
   .rent { display: flex; align-items: center; justify-content: center; height: 38px; margin-top: 10px; border-radius: 11px;
     font-weight: 800; font-size: 14px; color: #fff; background: linear-gradient(90deg, var(--accent), #6d28d9);
@@ -436,8 +439,16 @@
     .line { grid-template-columns: 1fr auto; }
     .line .k { grid-column: 1 / -1; }
     .total b { font-size: 23px; }
-    .info { grid-template-columns: 1fr; }
-    .info-ph { min-height: 190px; }
+    /* Оформление на телефоне: устройство — компактной строкой, чтобы поля для данных были видны сразу */
+    .info { grid-template-columns: 72px 1fr; gap: 12px; align-items: start; margin-bottom: 14px; padding-bottom: 14px; }
+    .info-ph { min-height: 0; width: 72px; height: 72px; border-radius: 12px; font-size: 30px; }
+    .info-t { font-size: 15px; margin: 0 0 3px; }
+    .info-d { font-size: 12px; line-height: 1.45; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical; overflow: hidden; cursor: pointer; }
+    .info-d.open { display: block; -webkit-line-clamp: unset; }
+    .info-more { display: inline-block; margin-top: 3px; font-size: 12px; color: var(--accent2); cursor: pointer; }
+    .tariffs.mini { display: none; }
+    #form h2 { font-size: 17px; margin: 0 0 10px; }
   }
   @media (max-width: 640px) {
     header { padding-top: 18px; }
@@ -502,6 +513,7 @@
           <div class="info-body">
             <p class="info-t" id="infoT"></p>
             <div class="info-d" id="infoD"></div>
+            <span class="info-more" id="infoMore">Подробнее ▾</span>
             <div class="tariffs mini" id="infoTar"></div>
           </div>
         </div>
@@ -1006,6 +1018,10 @@
   window.addEventListener('popstate', route);
   $('toGames').onclick = e => { e.preventDefault(); openGames(); };
   $('gamesBack').onclick = goMain;
+  $('infoD').onclick = $('infoMore').onclick = () => {
+    const open = $('infoD').classList.toggle('open');
+    $('infoMore').textContent = open ? 'Свернуть ▴' : 'Подробнее ▾';
+  };
   $('backBtn').onclick = () => {
     if (document.body.classList.contains('menu-open')) { closeMenu(); return; }
     if (!$('modal').classList.contains('hide')) { closeGame(); return; }
@@ -1031,6 +1047,9 @@
     $('infoPh').innerHTML = photoHtml(ph, selected.name, true) + (ph ? '' : emojiFor(selCat));
     $('infoT').textContent = selCat.title;
     $('infoD').innerHTML = textHtml(selCat.desc || '');
+    $('infoD').classList.remove('open');
+    $('infoMore').textContent = 'Подробнее ▾';
+    $('infoMore').style.visibility = selCat.desc ? '' : 'hidden';
     $('infoTar').innerHTML = tariffsHtml(selCat.prices);
     $('form').classList.remove('hide');
     $('err').classList.add('hide');
